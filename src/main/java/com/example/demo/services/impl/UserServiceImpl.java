@@ -1,6 +1,7 @@
 package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
+import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.DataNotFoundException;
@@ -26,6 +27,17 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(user_id).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + user_id + " not found")
         );
+        
+        ResMerchantDto merchantDto = null;
+        if (user.getMerchant() != null) {
+            merchantDto = new ResMerchantDto(
+                    user.getMerchant().getId(),
+                    user.getMerchant().getName(),
+                    user.getMerchant().getCategory() != null ? user.getMerchant().getCategory().getId() : null,
+                    user.getMerchant().getActive()
+            );
+        } // TODO: HANDLE MERCHANT MAPPING
+        
         return new ResUserDto(
                 user.getId(),
                 user.getFirstName(),
@@ -33,7 +45,7 @@ public class UserServiceImpl implements UserService {
                 user.getAddress(),
                 user.getBirthDate(),
                 user.getIsActive(),
-                user.getMerchant()
+                merchantDto
         );
     }
 

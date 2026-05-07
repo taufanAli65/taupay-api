@@ -43,7 +43,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/me")
+    @PatchMapping("/me")
     public ResponseEntity<BaseResponse> updateUserInformation(
             @Valid @RequestBody ReqUserUpdateDto user
             ) {
