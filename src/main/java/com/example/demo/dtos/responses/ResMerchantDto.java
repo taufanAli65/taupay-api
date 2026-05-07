@@ -12,6 +12,6 @@ import java.util.UUID;
 public class ResMerchantDto {
     private UUID id;
     private String name;
-    private UUID category_id;
-    private Boolean is_active;
+    private UUID category;
+    private Boolean active;
 }

@@ -1,6 +1,5 @@
 package com.example.demo.dtos.responses;
 
-import com.example.demo.entities.MerchantEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +17,5 @@ public class ResUserDto {
     private String address;
     private LocalDate birthDate;
     private Boolean isActive;
-    private MerchantEntity merchant;
+    private ResMerchantDto merchant;
 }

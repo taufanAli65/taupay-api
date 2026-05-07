@@ -10,8 +10,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReqUserUpdateDto {
-    private String first_name;
-    private String last_name;
+    private String firstName;
+    private String lastName;
     private String address;
-    private LocalDate birth_date;
+    private LocalDate birthDate;
 }
