@@ -1,5 +1,6 @@
 package com.example.demo.services.impl;
 
+import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.DataNotFoundException;
@@ -7,6 +8,7 @@ import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.example.demo.utils.PartialUpdateUtils;
 
 import java.util.UUID;
 
@@ -33,5 +35,14 @@ public class UserServiceImpl implements UserService {
                 user.getIsActive(),
                 user.getMerchant()
         );
+    }
+
+    @Override
+    public void updateUserById(ReqUserUpdateDto request, UUID user_id) {
+        UserEntity user = userRepository.findById(user_id).orElseThrow(
+                () -> new DataNotFoundException("User with ID: " + user_id + " not found")
+        );
+        PartialUpdateUtils.copyNonNullProperties(request, user);
+        userRepository.save(user);
     }
 }
