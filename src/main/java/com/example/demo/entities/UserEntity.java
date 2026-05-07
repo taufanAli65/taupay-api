@@ -34,5 +34,6 @@ public class UserEntity extends BaseEntity {
     @JoinColumn(name = "merchant_id", referencedColumnName = "id")
     private MerchantEntity merchant;
 
-    private Boolean is_active;
+    @Column(name = "is_active")
+    private Boolean isActive;
 }
