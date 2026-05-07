@@ -20,5 +20,6 @@ public class MerchantEntity extends BaseEntity {
     @JoinColumn(name = "category_id", referencedColumnName = "id")
     private CategoryEntity category;
 
-    private Boolean is_active;
+    @Column(name = "is_active")
+    private Boolean active;
 }
