@@ -13,10 +13,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ResUserDto {
     private UUID id;
-    private String first_name;
-    private String last_name;
+    private String firstName;
+    private String lastName;
     private String address;
-    private LocalDate birth_date;
-    private Boolean is_active;
+    private LocalDate birthDate;
+    private Boolean isActive;
     private MerchantEntity merchant;
 }
