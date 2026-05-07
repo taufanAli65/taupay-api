@@ -1,0 +1,38 @@
+package com.example.demo.services.impl;
+
+import com.example.demo.dtos.requests.ReqIdDto;
+import com.example.demo.dtos.responses.ResUserDto;
+import com.example.demo.entities.UserEntity;
+import com.example.demo.exceptions.DataNotFoundException;
+import com.example.demo.repositories.UserRepository;
+import com.example.demo.services.UserService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Slf4j
+@Service
+public class UserServiceImpl implements UserService {
+    private final UserRepository userRepository;
+
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public ResUserDto getUserById(ReqIdDto request) {
+        UserEntity user = userRepository.findById(request.getId()).orElseThrow(
+                () -> new DataNotFoundException("User with ID: " + request + " not found")
+        );
+        return new ResUserDto(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getAddress(),
+                user.getBirthDate(),
+                user.getIsActive(),
+                user.getMerchant()
+        );
+    }
+}
