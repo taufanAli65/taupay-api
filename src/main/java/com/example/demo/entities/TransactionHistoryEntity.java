@@ -25,7 +25,8 @@ public class TransactionHistoryEntity extends BaseEntity {
 
     private BigInteger amount;
 
-    private Boolean is_success;
+    @Column(name = "is_success")
+    private Boolean isSuccess;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", referencedColumnName = "id")
