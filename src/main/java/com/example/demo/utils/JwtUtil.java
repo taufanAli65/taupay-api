@@ -1,5 +1,6 @@
 package com.example.demo.utils;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,13 +23,43 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String email, UUID idUser) {
+    public String generateToken(String email, String role, UUID profileId) {
         return Jwts.builder()
                 .subject(email)
-                .claim("idUser", idUser)
+                .claim("role", role)
+                .claim("profileId", profileId)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    private Claims parseClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public String getEmail(String token) {
+        return parseClaims(token).getSubject();
+    }
+
+    public String getRole(String token) {
+        return parseClaims(token).get("role", String.class);
+    }
+
+    public String getProfileId(String token) {
+        return parseClaims(token).get("profileId", String.class);
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            parseClaims(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
