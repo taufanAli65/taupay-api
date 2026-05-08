@@ -3,7 +3,6 @@ package com.example.demo.controllers;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResUserDto;
-import com.example.demo.entities.BaseEntity;
 import com.example.demo.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
