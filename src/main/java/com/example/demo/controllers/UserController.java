@@ -9,6 +9,7 @@ import com.example.demo.services.UserService;
 import com.example.demo.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class UserController {
             ) {
         ResUserDto user = userService.getUserById(id);
 
-       BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user, null);
+       BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user);
        return ResponseEntity.ok(response);
     }
 
@@ -35,7 +36,7 @@ public class UserController {
         UUID userId = SecurityUtils.getCurrentProfileId();
         ResUserDto user = userService.getUserById(userId);
 
-        BaseResponse<ResUserDto> response = BaseResponse.success("Information Retrieved Successfully", user, null);
+        BaseResponse<ResUserDto> response = BaseResponse.success("Information Retrieved Successfully", user);
         return ResponseEntity.ok(response);
     }
 
@@ -56,7 +57,7 @@ public class UserController {
             ) {
         UUID userId = SecurityUtils.getCurrentProfileId();
         userService.updateUserById(user, userId);
-        BaseResponse<Void> response = BaseResponse.success("User Information Updated Successfully", null, null);
+        BaseResponse<Void> response = BaseResponse.success("User Information Updated Successfully", null);
         return ResponseEntity.ok(response);
     }
 

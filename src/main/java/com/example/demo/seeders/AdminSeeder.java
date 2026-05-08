@@ -1,4 +1,4 @@
-package com.example.demo.config;
+package com.example.demo.seeders;
 
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.RoleEnum;
