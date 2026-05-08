@@ -30,10 +30,6 @@ public class UserEntity extends BaseEntity {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "merchant_id", referencedColumnName = "id")
-    private MerchantEntity merchant;
-
     @Column(name = "is_active")
-    private Boolean isActive;
+    private Boolean isActive = true;
 }
