@@ -44,7 +44,7 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
                     select count(u)
                     from UserEntity u
                     join u.account a
-                """)
+                """) // TODO: optimize count query since it currently need to scan all table just to count total data
     Page<ResUserDto> findAllUsers(Pageable pageable);
     Optional<UserEntity> findByAccountId(UUID id);
 }
