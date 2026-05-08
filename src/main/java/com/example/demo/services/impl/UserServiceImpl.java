@@ -7,6 +7,10 @@ import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.UserService;
 import lombok.extern.slf4j.Slf4j;
+
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.example.demo.utils.PartialUpdateUtils;
 
@@ -35,5 +39,11 @@ public class UserServiceImpl implements UserService {
         );
         PartialUpdateUtils.copyNonNullProperties(request, user);
         userRepository.save(user);
+    }
+
+    @Override
+    public Page<ResUserDto> findAllUsers(int size, int page) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return userRepository.findAllUsers(pageRequest);
     }
 }
