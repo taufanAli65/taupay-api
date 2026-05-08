@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
         UserEntity user = userRepository.findByAccountId(account.getId())
                 .orElseThrow(() -> new DataNotFoundException("User profile not found for this account"));
 
-        return accountMapper.toLoginResponse(account, user, jwtUtil.generateToken(account.getEmail(), account.getId()));
+        return accountMapper.toLoginResponse(account, user, jwtUtil.generateToken(account.getEmail(), user.getId()));
     }
 
     @Override
