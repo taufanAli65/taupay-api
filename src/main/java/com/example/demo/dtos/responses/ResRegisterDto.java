@@ -8,5 +8,5 @@ public class ResRegisterDto {
     private String lastName;
     private String email;
     private String address;
-    private String birthOfDate;
+    private String birthDate;
 }
