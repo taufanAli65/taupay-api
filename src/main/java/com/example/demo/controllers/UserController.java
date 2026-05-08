@@ -2,10 +2,13 @@ package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.BaseResponse;
+import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +32,7 @@ public class UserController {
         // TODO: IMPLEMENT CHECKING ROLE
         ResUserDto user = userService.getUserById(id);
 
-       BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user);
+       BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user, null);
        return ResponseEntity.ok(response);
     }
 
@@ -38,17 +41,29 @@ public class UserController {
         UUID user_id = UUID.fromString(request.getHeader("X-Authenticated-User-Id"));
         ResUserDto user = userService.getUserById(user_id);
 
-        BaseResponse<ResUserDto> response = BaseResponse.success("Information Retrieved Successfully", user);
+        BaseResponse<ResUserDto> response = BaseResponse.success("Information Retrieved Successfully", user, null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/")
+    public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        // TODO: IMPLEMENT CHECKING ROLE
+        Page<ResUserDto> users = userService.findAllUsers(size, page);
+        ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber());
+        BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<BaseResponse> updateUserInformation(
+    public ResponseEntity<BaseResponse<ResUserDto>> updateUserInformation(
             @Valid @RequestBody ReqUserUpdateDto user
             ) {
         UUID user_id = UUID.fromString(request.getHeader("X-Authenticated-User-Id"));
         userService.updateUserById(user, user_id);
-        BaseResponse response = BaseResponse.success("User Information Updated Successfully", null);
+        BaseResponse<ResUserDto> response = BaseResponse.success("User Information Updated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
 
