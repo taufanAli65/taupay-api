@@ -71,5 +71,5 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
                 merchantCategory.getName()
             ))
             .collect(Collectors.toList());
-        }
     }
+}
