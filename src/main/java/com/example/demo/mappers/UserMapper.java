@@ -27,7 +27,7 @@ public class UserMapper {
         response.setFirstName(user.getFirstName());
         response.setLastName(user.getLastName());
         response.setAddress(user.getAddress());
-        response.setBirthOfDate(String.valueOf(user.getBirthDate()));
+        response.setBirthDate(String.valueOf(user.getBirthDate()));
 
         if (account != null) {
             response.setEmail(account.getEmail());
