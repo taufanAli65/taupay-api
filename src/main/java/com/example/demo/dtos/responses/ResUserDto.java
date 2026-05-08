@@ -14,6 +14,7 @@ public class ResUserDto {
     private UUID id;
     private String firstName;
     private String lastName;
+    private String email;
     private String address;
     private LocalDate birthDate;
     private Boolean isActive;

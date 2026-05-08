@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResUserDto getUserById(UUID user_id) {
-        UserEntity user = userRepository.findById(user_id).orElseThrow(
+        ResUserDto user = userRepository.findUserById(user_id).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + user_id + " not found")
         );
         
@@ -31,6 +31,7 @@ public class UserServiceImpl implements UserService {
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
+                user.getEmail(),
                 user.getAddress(),
                 user.getBirthDate(),
                 user.getIsActive()
