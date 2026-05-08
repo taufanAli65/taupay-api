@@ -45,12 +45,12 @@ public class MerchantCategoryController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<BaseResponse<ResMerchantCategoryDto>> updateMerchantCategoryName(
+    public ResponseEntity<BaseResponse<Void>> updateMerchantCategoryName(
             @PathVariable("id") UUID id,
             @Valid @RequestBody ReqMerchantCategoryDto request
     ) {
         merchantCategoryService.updateMerchantCategoryName(id, request);
-        BaseResponse<ResMerchantCategoryDto> response = BaseResponse.success("Merchant Category Updated Successfully", null, null);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Updated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
 

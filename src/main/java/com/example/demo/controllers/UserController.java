@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
@@ -47,11 +48,10 @@ public class UserController {
 
     @GetMapping("/")
     public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "0") int page
+            @Valid ReqPaginationDto paginationDto
     ) {
         // TODO: IMPLEMENT CHECKING ROLE
-        Page<ResUserDto> users = userService.findAllUsers(size, page);
+        Page<ResUserDto> users = userService.findAllUsers(paginationDto.getSize(), paginationDto.getPage());
         ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber());
         BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
         return ResponseEntity.ok(response);
