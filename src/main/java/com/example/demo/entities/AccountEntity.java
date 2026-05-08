@@ -12,12 +12,13 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountEntity extends BaseEntity {
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 6)
     private String pin;
 
     @Column(nullable = false)
