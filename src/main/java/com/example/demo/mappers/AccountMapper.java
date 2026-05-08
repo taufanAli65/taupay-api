@@ -4,6 +4,7 @@ import com.example.demo.dtos.requests.ReqRegisterDto;
 import com.example.demo.dtos.responses.ResLoginDto;
 import com.example.demo.dtos.responses.ResRegisterDto;
 import com.example.demo.entities.AccountEntity;
+import com.example.demo.entities.RoleEnum;
 import com.example.demo.entities.UserEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ public class AccountMapper {
 
         AccountEntity entity = new AccountEntity();
         entity.setEmail(dto.getEmail());
-        entity.setRole("user");
+        entity.setRole(RoleEnum.USER);
         return entity;
     }
 

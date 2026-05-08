@@ -9,12 +9,12 @@ import lombok.Setter;
 import java.math.BigInteger;
 
 @Entity
-@Table(name = "mst_transaction_histories")
+@Table(name = "mst_account_transaction_histories")
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionHistoryEntity extends BaseEntity {
+public class AccountTransactionEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id", referencedColumnName = "id")
     private MerchantEntity receiver;
@@ -23,12 +23,12 @@ public class TransactionHistoryEntity extends BaseEntity {
     @JoinColumn(name = "requester_id", referencedColumnName = "id")
     private UserEntity requester;
 
+    @Column(nullable = false)
     private BigInteger amount;
 
-    @Column(name = "is_success")
+    @Column(name = "is_success", nullable = false)
     private Boolean isSuccess;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", referencedColumnName = "id")
-    private CategoryEntity category;
+    @Column(nullable = false)
+    private String category;
 }
