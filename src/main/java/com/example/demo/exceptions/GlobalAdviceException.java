@@ -45,4 +45,10 @@ public class GlobalAdviceException {
         BaseResponse<Object> response = BaseResponse.error(exception.getMessage(), null);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<BaseResponse<Object>> handleGeneralException(Exception exception) {
+        BaseResponse<Object> response = BaseResponse.error("Internal Server Error: " + exception.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 }

@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     @Query("""
-            select u.id, u.firstName, u.lastName, u.address, u.birthDate, u.isActive, a.email
+            select new com.example.demo.dtos.responses.ResUserDto(u.id, u.firstName, u.lastName, a.email, u.address, u.birthDate, u.isActive)
             from UserEntity u
             join u.account a
             where u.id = :userId
