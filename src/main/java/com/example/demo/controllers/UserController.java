@@ -58,12 +58,12 @@ public class UserController {
     }
 
     @PatchMapping("/me")
-    public ResponseEntity<BaseResponse<ResUserDto>> updateUserInformation(
+    public ResponseEntity<BaseResponse<Void>> updateUserInformation(
             @Valid @RequestBody ReqUserUpdateDto user
             ) {
         UUID user_id = UUID.fromString(request.getHeader("X-Authenticated-User-Id"));
         userService.updateUserById(user, user_id);
-        BaseResponse<ResUserDto> response = BaseResponse.success("User Information Updated Successfully", null, null);
+        BaseResponse<Void> response = BaseResponse.success("User Information Updated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
 
