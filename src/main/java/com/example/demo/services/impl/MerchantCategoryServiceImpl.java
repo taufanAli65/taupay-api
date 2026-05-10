@@ -5,6 +5,7 @@ import com.example.demo.dtos.requests.ReqMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.entities.MerchantCategoryEntity;
 import com.example.demo.exceptions.DataNotFoundException;
+import com.example.demo.mappers.MerchantCategoryMapper;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.services.MerchantCategoryService;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,9 +22,14 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class MerchantCategoryServiceImpl implements MerchantCategoryService {
     private final MerchantCategoryRepository merchantCategoryRepository;
+    private final MerchantCategoryMapper merchantCategoryMapper;
 
-    public MerchantCategoryServiceImpl(MerchantCategoryRepository merchantCategoryRepository) {
+    public MerchantCategoryServiceImpl(
+            MerchantCategoryRepository merchantCategoryRepository,
+            MerchantCategoryMapper merchantCategoryMapper
+    ) {
         this.merchantCategoryRepository = merchantCategoryRepository;
+        this.merchantCategoryMapper = merchantCategoryMapper;
     }
 
     @Override
@@ -36,7 +42,7 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
         MerchantCategoryEntity merchantCategory = new MerchantCategoryEntity();
         merchantCategory.setName(req.getName());
         MerchantCategoryEntity savedMerchantCategory = merchantCategoryRepository.save(merchantCategory);
-        return toResponse(savedMerchantCategory);
+        return merchantCategoryMapper.toResponse(savedMerchantCategory);
     }
 
     @Override
@@ -45,7 +51,7 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
         MerchantCategoryEntity merchantCategory = merchantCategoryRepository.findById(id).orElseThrow(
                 () -> new DataNotFoundException("Merchant Category with ID: " + id + " not found")
         );
-        return toResponse(merchantCategory);
+        return merchantCategoryMapper.toResponse(merchantCategory);
     }
 
     @Override
@@ -73,7 +79,7 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
         );
         merchantCategory.setName(req.getName());
         MerchantCategoryEntity updatedMerchantCategory = merchantCategoryRepository.save(merchantCategory);
-        return toResponse(updatedMerchantCategory);
+        return merchantCategoryMapper.toResponse(updatedMerchantCategory);
     }
 
     @Override
@@ -81,11 +87,7 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
     public List<ResMerchantCategoryDto> getAllMerchantCategories() {
         return merchantCategoryRepository.findAll()
                 .stream()
-                .map(this::toResponse)
+                .map(merchantCategoryMapper::toResponse)
                 .toList();
-    }
-
-    private ResMerchantCategoryDto toResponse(MerchantCategoryEntity merchantCategory) {
-        return new ResMerchantCategoryDto(merchantCategory.getId(), merchantCategory.getName());
     }
 }

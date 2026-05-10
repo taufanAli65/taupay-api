@@ -10,6 +10,7 @@ import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.RoleEnum;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.DuplicateResourceException;
+import com.example.demo.mappers.MerchantMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -31,6 +32,7 @@ public class MerchantServiceImpl implements MerchantService {
     private final MerchantRepository merchantRepository;
     private final MerchantCategoryRepository merchantCategoryRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MerchantMapper merchantMapper;
 
     @Override
     @Transactional
@@ -54,20 +56,20 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setCategory(category);
         merchant.setIsActive(true);
 
-        return toResponse(merchantRepository.save(merchant));
+        return merchantMapper.toResponse(merchantRepository.save(merchant));
     }
 
     @Override
     public Page<ResMerchantDto> findAllMerchants(int size, int page) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        return merchantRepository.findAllByOrderByNameAsc(pageRequest).map(this::toResponse);
+        return merchantRepository.findAllByOrderByNameAsc(pageRequest).map(merchantMapper::toResponse);
     }
 
     @Override
     public ResMerchantDto getMerchantById(UUID merchantId) {
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
-        return toResponse(merchant);
+        return merchantMapper.toResponse(merchant);
     }
 
     @Override
@@ -81,7 +83,7 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setAddress(request.getAddress());
         merchant.setCategory(category);
 
-        return toResponse(merchantRepository.save(merchant));
+        return merchantMapper.toResponse(merchantRepository.save(merchant));
     }
 
     @Override
@@ -90,23 +92,11 @@ public class MerchantServiceImpl implements MerchantService {
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
         merchant.setIsActive(request.getIsActive());
-        return toResponse(merchantRepository.save(merchant));
+        return merchantMapper.toResponse(merchantRepository.save(merchant));
     }
 
     private MerchantCategoryEntity findCategoryById(UUID categoryId) {
         return merchantCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant category not found"));
-    }
-
-    private ResMerchantDto toResponse(MerchantEntity merchant) {
-        return ResMerchantDto.builder()
-                .id(merchant.getId())
-                .name(merchant.getName())
-                .email(merchant.getAccount().getEmail())
-                .address(merchant.getAddress())
-                .categoryId(merchant.getCategory().getId())
-                .categoryName(merchant.getCategory().getName())
-                .active(merchant.getIsActive())
-                .build();
     }
 }

@@ -16,6 +16,7 @@ import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.DuplicateResourceException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.AccountMapper;
+import com.example.demo.mappers.MerchantMapper;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -39,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private final MerchantService merchantService;
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
+    private final MerchantMapper merchantMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -96,12 +98,6 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public ResRegisterMerchantDto registerMerchant(ReqRegisterMerchantDto request) {
         ResMerchantDto merchant = merchantService.createMerchant(request);
-
-        return ResRegisterMerchantDto.builder()
-                .id(merchant.getId())
-                .name(merchant.getName())
-                .email(merchant.getEmail())
-                .address(merchant.getAddress())
-                .build();
+        return merchantMapper.toRegisterResponse(merchant);
     }
 }
