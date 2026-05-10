@@ -17,7 +17,6 @@ import com.example.demo.exceptions.DuplicateResourceException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.AccountMapper;
 import com.example.demo.mappers.MerchantMapper;
-import com.example.demo.mappers.MerchantMapper;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -42,7 +41,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
     private final MerchantMapper merchantMapper;
-    private final MerchantMapper merchantMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -55,29 +53,31 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email and password doesn't match");
         }
 
-        String token;
         if (account.getRole() == RoleEnum.USER) {
             UserEntity user = userRepository.findByAccountId(account.getId())
                     .orElseThrow(() -> new DataNotFoundException("User profile not found"));
-            token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), user.getId());
+            String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), user.getId());
             return accountMapper.toLoginResponse(account, user, token);
-        } else if (account.getRole() == RoleEnum.MERCHANT) {
+        }
+
+        if (account.getRole() == RoleEnum.MERCHANT) {
             MerchantEntity merchant = merchantRepository.findByAccountId(account.getId())
                     .orElseThrow(() -> new DataNotFoundException("Merchant profile not found"));
             if (!Boolean.TRUE.equals(merchant.getIsActive())) {
                 throw new UnauthorizedException("Merchant account is inactive");
             }
-            profileId = merchant.getId();
-        } else if (account.getRole() == RoleEnum.SUPER_ADMIN) {
-            profileId = account.getId();
+            String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), merchant.getId());
+            return accountMapper.toLoginResponse(account, merchant, token);
         }
 
-        String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), profileId);
+        if (account.getRole() == RoleEnum.SUPER_ADMIN) {
+            String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), account.getId());
+            ResLoginDto response = new ResLoginDto();
+            response.setToken(token);
+            return response;
+        }
 
-        ResLoginDto response = new ResLoginDto();
-        response.setToken(token);
-
-        return response;
+        throw new UnauthorizedException("Unsupported account role");
     }
 
     @Override
@@ -99,22 +99,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public ResRegisterMerchantDto registerMerchant(ReqRegisterMerchantDto request) {
-        if (accountRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Email is already used");
-        }
-
-        MerchantCategoryEntity category = merchantCategoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new DataNotFoundException("Merchant category not found"));
-
-        AccountEntity newAccount = accountMapper.toEntity(request);
-        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
-        AccountEntity savedAccount = accountRepository.save(newAccount);
-
-        MerchantEntity merchant = merchantMapper.toEntity(request, category);
-        merchant.setAccount(savedAccount);
-        MerchantEntity savedMerchant = merchantRepository.save(merchant);
-
-        return merchantMapper.toRegisterResponse(savedMerchant, savedAccount);
         ResMerchantDto merchant = merchantService.createMerchant(request);
         return merchantMapper.toRegisterResponse(merchant);
     }

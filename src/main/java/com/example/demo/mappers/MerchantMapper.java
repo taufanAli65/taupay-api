@@ -28,12 +28,15 @@ public class MerchantMapper {
             return null;
         }
 
-        return ResRegisterMerchantDto.builder()
-                .id(merchant.getId())
-                .name(merchant.getName())
-                .email(merchant.getAccount().getEmail())
-                .address(merchant.getAddress())
-                .build();
+        ResRegisterMerchantDto response = new ResRegisterMerchantDto();
+        response.setId(merchant.getId());
+        response.setName(merchant.getName());
+        response.setEmail(merchant.getAccount().getEmail());
+        response.setAddress(merchant.getAddress());
+        if (merchant.getCategory() != null) {
+            response.setCategory(merchant.getCategory().getName());
+        }
+        return response;
     }
 
     public ResRegisterMerchantDto toRegisterResponse(ResMerchantDto merchant) {
@@ -41,11 +44,12 @@ public class MerchantMapper {
             return null;
         }
 
-        return ResRegisterMerchantDto.builder()
-                .id(merchant.getId())
-                .name(merchant.getName())
-                .email(merchant.getEmail())
-                .address(merchant.getAddress())
-                .build();
+        ResRegisterMerchantDto response = new ResRegisterMerchantDto();
+        response.setId(merchant.getId());
+        response.setName(merchant.getName());
+        response.setEmail(merchant.getEmail());
+        response.setAddress(merchant.getAddress());
+        response.setCategory(merchant.getCategoryName());
+        return response;
     }
 }

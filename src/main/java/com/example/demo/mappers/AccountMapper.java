@@ -54,7 +54,7 @@ public class AccountMapper {
     public ResLoginDto toLoginResponse(AccountEntity account, MerchantEntity merchant, String token) {
         ResLoginDto response = new ResLoginDto();
         if (merchant != null) {
-            ResRegisterMerchantDto merchantDto = merchantMapper.toRegisterResponse(merchant, account);
+            ResRegisterMerchantDto merchantDto = merchantMapper.toRegisterResponse(merchant);
             response.setMerchant(merchantDto);
         }
         response.setToken(token);
