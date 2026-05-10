@@ -27,7 +27,7 @@ public class AuthController {
             @Valid @RequestBody ReqRegisterDto request
     ) {
         ResRegisterDto user = authService.register(request);
-        BaseResponse<ResRegisterDto> response = BaseResponse.success("Success Register User", user, null);
+        BaseResponse<ResRegisterDto> response = BaseResponse.success("Success Register User", user);
         return ResponseEntity.ok(response);
     }
 
@@ -36,7 +36,7 @@ public class AuthController {
             @Valid @RequestBody ReqRegisterMerchantDto request
     ) {
         ResRegisterMerchantDto merchant = authService.registerMerchant(request);
-        BaseResponse<ResRegisterMerchantDto> response = BaseResponse.success("Success Register Merchant", merchant, null);
+        BaseResponse<ResRegisterMerchantDto> response = BaseResponse.success("Success Register Merchant", merchant);
         return ResponseEntity.ok(response);
     }
 
@@ -45,7 +45,7 @@ public class AuthController {
             @Valid @RequestBody ReqLoginDto request
     ) {
         ResLoginDto user = authService.login(request);
-        BaseResponse<ResLoginDto> response = BaseResponse.success("Success Login User", user, null);
+        BaseResponse<ResLoginDto> response = BaseResponse.success("Success Login User", user);
         return ResponseEntity.ok(response);
     }
 }

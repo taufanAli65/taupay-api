@@ -17,6 +17,7 @@ import com.example.demo.exceptions.DuplicateResourceException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.AccountMapper;
 import com.example.demo.mappers.MerchantMapper;
+import com.example.demo.mappers.MerchantMapper;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -41,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
     private final MerchantMapper merchantMapper;
+    private final MerchantMapper merchantMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -53,11 +55,12 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email and password doesn't match");
         }
 
-        UUID profileId = null;
+        String token;
         if (account.getRole() == RoleEnum.USER) {
             UserEntity user = userRepository.findByAccountId(account.getId())
                     .orElseThrow(() -> new DataNotFoundException("User profile not found"));
-            profileId = user.getId();
+            token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), user.getId());
+            return accountMapper.toLoginResponse(account, user, token);
         } else if (account.getRole() == RoleEnum.MERCHANT) {
             MerchantEntity merchant = merchantRepository.findByAccountId(account.getId())
                     .orElseThrow(() -> new DataNotFoundException("Merchant profile not found"));
@@ -85,7 +88,6 @@ public class AuthServiceImpl implements AuthService {
         }
         UserEntity newUser = userMapper.toEntity(request);
         AccountEntity newAccount = accountMapper.toEntity(request);
-        newAccount.setRole(RoleEnum.USER);
         newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
 
         AccountEntity savedAccount = accountRepository.save(newAccount);
@@ -97,6 +99,22 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public ResRegisterMerchantDto registerMerchant(ReqRegisterMerchantDto request) {
+        if (accountRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Email is already used");
+        }
+
+        MerchantCategoryEntity category = merchantCategoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new DataNotFoundException("Merchant category not found"));
+
+        AccountEntity newAccount = accountMapper.toEntity(request);
+        newAccount.setPassword(passwordEncoder.encode(request.getPassword()));
+        AccountEntity savedAccount = accountRepository.save(newAccount);
+
+        MerchantEntity merchant = merchantMapper.toEntity(request, category);
+        merchant.setAccount(savedAccount);
+        MerchantEntity savedMerchant = merchantRepository.save(merchant);
+
+        return merchantMapper.toRegisterResponse(savedMerchant, savedAccount);
         ResMerchantDto merchant = merchantService.createMerchant(request);
         return merchantMapper.toRegisterResponse(merchant);
     }

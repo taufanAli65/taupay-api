@@ -32,7 +32,7 @@ public class MerchantCategoryController {
     @GetMapping({"", "/"})
     public ResponseEntity<BaseResponse<List<ResMerchantCategoryDto>>> getAllMerchantCategories() {
         List<ResMerchantCategoryDto> merchantCategories = merchantCategoryService.getAllMerchantCategories();
-        BaseResponse<List<ResMerchantCategoryDto>> response = BaseResponse.success("Merchant Categories Retrieved Successfully", merchantCategories, null);
+        BaseResponse<List<ResMerchantCategoryDto>> response = BaseResponse.success("Merchant Categories Retrieved Successfully", merchantCategories);
         return ResponseEntity.ok(response);
     }
 
@@ -41,7 +41,7 @@ public class MerchantCategoryController {
             @PathVariable("id") UUID id
     ) {
         ResMerchantCategoryDto merchantCategory = merchantCategoryService.getMerchantCategoryById(id);
-        BaseResponse<ResMerchantCategoryDto> response = BaseResponse.success("Merchant Category Retrieved Successfully", merchantCategory, null);
+        BaseResponse<ResMerchantCategoryDto> response = BaseResponse.success("Merchant Category Retrieved Successfully", merchantCategory);
         return ResponseEntity.ok(response);
     }
 
@@ -51,7 +51,7 @@ public class MerchantCategoryController {
             @Valid @RequestBody ReqMerchantCategoryDto request
     ) {
         merchantCategoryService.updateMerchantCategoryName(id, request);
-        BaseResponse<Void> response = BaseResponse.success("Merchant Category Updated Successfully", null, null);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Updated Successfully", null);
         return ResponseEntity.ok(response);
     }
 
@@ -60,7 +60,7 @@ public class MerchantCategoryController {
             @PathVariable("id") UUID id
     ) {
         merchantCategoryService.deleteMerchantCategory(id);
-        BaseResponse<Void> response = BaseResponse.success("Merchant Category Deleted Successfully", null, null);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Deleted Successfully", null);
         return ResponseEntity.ok(response);
     }
 }
