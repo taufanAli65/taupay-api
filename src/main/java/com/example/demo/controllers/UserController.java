@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -21,16 +22,18 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
+    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('USER') and @securityUtils.isCurrentProfileId(#id))")
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponse<ResUserDto>> getUserById(
             @Valid @PathVariable("id") UUID id
-            ) {
+    ) {
         ResUserDto user = userService.getUserById(id);
 
-       BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user, null);
-       return ResponseEntity.ok(response);
+        BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user, null);
+        return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     public ResponseEntity<BaseResponse<ResUserDto>> getCurrentUserInformation() {
         UUID userId = SecurityUtils.getCurrentProfileId();
@@ -40,25 +43,27 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @GetMapping("/")
     public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
             @Valid ReqPaginationDto paginationDto
     ) {
-        // TODO: IMPLEMENT CHECKING ROLE
-        Page<ResUserDto> users = userService.findAllUsers(paginationDto.getSize(), paginationDto.getPage());
+        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
+        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
+        Page<ResUserDto> users = userService.findAllUsers(size, page);
         ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber());
         BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/me")
     public ResponseEntity<BaseResponse<Void>> updateUserInformation(
             @Valid @RequestBody ReqUserUpdateDto user
-            ) {
+    ) {
         UUID userId = SecurityUtils.getCurrentProfileId();
         userService.updateUserById(user, userId);
         BaseResponse<Void> response = BaseResponse.success("User Information Updated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
-
 }

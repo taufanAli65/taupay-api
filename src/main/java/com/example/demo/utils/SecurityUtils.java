@@ -2,12 +2,15 @@ package com.example.demo.utils;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.UUID;
 
+@Component("securityUtils")
 public class SecurityUtils {
 
+    @SuppressWarnings("unchecked")
     public static UUID getCurrentProfileId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getDetails() instanceof Map) {
@@ -26,5 +29,9 @@ public class SecurityUtils {
             return authentication.getName();
         }
         return null;
+    }
+
+    public boolean isCurrentProfileId(UUID profileId) {
+        return profileId != null && profileId.equals(getCurrentProfileId());
     }
 }

@@ -7,6 +7,14 @@ spring:
     username: xxxxx
     password: xxxxx
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+      repositories:
+        enabled: false
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +24,10 @@ spring:
         format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
- jwt:
-   secret: your_secret_key
-   expiration: 86400000
+app:
+  cache:
+    merchant-category-ttl: 1h
+
+jwt:
+  secret: your_secret_key
+  expiration: 86400000

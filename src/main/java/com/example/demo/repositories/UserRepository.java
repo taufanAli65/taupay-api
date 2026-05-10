@@ -12,21 +12,22 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<UserEntity, UUID> {
-        @Query(value = """
-                        select new com.example.demo.dtos.responses.ResUserDto(
-                                u.id,
-                                u.firstName,
-                                u.lastName,
-                                a.email,
-                                u.address,
-                                u.birthDate,
-                                u.isActive
-                        )
-                        from UserEntity u
-                        join u.account a
-                        where u.id = :userId
-                        """)
+    @Query(value = """
+                    select new com.example.demo.dtos.responses.ResUserDto(
+                            u.id,
+                            u.firstName,
+                            u.lastName,
+                            a.email,
+                            u.address,
+                            u.birthDate,
+                            u.isActive
+                    )
+                    from UserEntity u
+                    join u.account a
+                    where u.id = :userId
+                    """)
     Optional<ResUserDto> findUserById(@Param("userId") UUID userId);
+
     @Query(value = """
                     select new com.example.demo.dtos.responses.ResUserDto(
                             u.id,
@@ -40,11 +41,11 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
                     from UserEntity u
                     join u.account a
                     """,
-                    countQuery = """
+            countQuery = """
                     select count(u)
                     from UserEntity u
-                    join u.account a
-                """) // TODO: optimize count query since it currently need to scan all table just to count total data
+                    """)
     Page<ResUserDto> findAllUsers(Pageable pageable);
+
     Optional<UserEntity> findByAccountId(UUID id);
 }
