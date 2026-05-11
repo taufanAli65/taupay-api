@@ -1,7 +1,6 @@
 package com.example.demo.config;
 
 import com.example.demo.utils.JwtUtil;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
