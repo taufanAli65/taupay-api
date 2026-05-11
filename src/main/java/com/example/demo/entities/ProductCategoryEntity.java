@@ -17,10 +17,6 @@ public class ProductCategoryEntity extends BaseEntity {
     @JoinColumn(name = "merchant_id", referencedColumnName = "id")
     private MerchantEntity merchant;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", referencedColumnName = "id")
-    private ProductEntity product;
-
     @Column(nullable = false)
     private String name;
 

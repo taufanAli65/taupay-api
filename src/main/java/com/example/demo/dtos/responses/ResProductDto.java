@@ -13,4 +13,5 @@ public class ResProductDto {
     private Boolean isActive;
     private String imageUrl;
     private ResMerchantDto merchant;
+    private ResProductCategoryDto category;
 }
