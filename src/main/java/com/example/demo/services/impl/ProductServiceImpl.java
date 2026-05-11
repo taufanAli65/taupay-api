@@ -4,11 +4,13 @@ import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.entities.MerchantEntity;
+import com.example.demo.entities.ProductCategoryEntity;
 import com.example.demo.entities.ProductEntity;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.ProductMapper;
 import com.example.demo.repositories.MerchantRepository;
+import com.example.demo.repositories.ProductCategoryRepository;
 import com.example.demo.repositories.ProductRepository;
 import com.example.demo.services.ProductService;
 import com.example.demo.utils.PartialUpdateUtils;
@@ -28,6 +30,7 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final MerchantRepository merchantRepository;
+    private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
 
     @Override
@@ -66,8 +69,15 @@ public class ProductServiceImpl implements ProductService {
     public ResCreateProductDto createProduct(ReqCreateProductDto request) {
         MerchantEntity merchant = getMerchantByProfile();
         
+        ProductCategoryEntity category = null;
+        if (request.getCategoryId() != null) {
+            category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
+                    .orElseThrow(() -> new DataNotFoundException("Category not found"));
+        }
+        
         ProductEntity product = productMapper.toEntity(request);
         product.setMerchant(merchant);
+        product.setCategory(category);
 
         return productMapper.toCreateResponse(productRepository.save(product));
     }
@@ -78,8 +88,15 @@ public class ProductServiceImpl implements ProductService {
         MerchantEntity merchant = getMerchantByProfile();
 
         List<ProductEntity> products = requests.stream().map(request -> {
+            ProductCategoryEntity category = null;
+            if (request.getCategoryId() != null) {
+                category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
+                        .orElseThrow(() -> new DataNotFoundException("Category not found for product: " + request.getName()));
+            }
+            
             ProductEntity product = productMapper.toEntity(request);
             product.setMerchant(merchant);
+            product.setCategory(category);
             return product;
         }).toList();
 
@@ -95,7 +112,13 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchant.getId())
                 .orElseThrow(() -> new DataNotFoundException("Product not found"));
 
+        ProductCategoryEntity category = null;
         PartialUpdateUtils.copyNonNullProperties(request, product);
+        if (request.getCategoryId() != null) {
+            category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
+                    .orElseThrow(() -> new DataNotFoundException("Category not found"));
+        }
+        product.setCategory(category);
         return productMapper.toCreateResponse(productRepository.save(product));
     }
 
