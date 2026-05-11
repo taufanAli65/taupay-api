@@ -31,6 +31,10 @@ public class ProductMapper {
         response.setDescription(product.getDescription());
         response.setIsActive(product.getIsActive());
         response.setMerchantId(product.getMerchant().getId());
+        if (product.getCategory() != null) {
+            response.setCategoryId(product.getCategory().getId());
+            response.setCategoryName(product.getCategory().getName());
+        }
         return response;
     }
 
@@ -52,6 +56,13 @@ public class ProductMapper {
             merchantDto.setCategoryId(merchant.getCategory().getId());
             merchantDto.setActive(merchant.getIsActive());
             response.setMerchant(merchantDto);
+        }
+
+        if (product.getCategory() != null) {
+            ResProductCategoryDto categoryDto = new ResProductCategoryDto();
+            categoryDto.setId(product.getCategory().getId());
+            categoryDto.setName(product.getCategory().getName());
+            response.setCategory(categoryDto);
         }
 
         return response;

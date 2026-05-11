@@ -12,4 +12,6 @@ public class ResCreateProductDto {
     private String description;
     private Boolean isActive;
     private UUID merchantId;
+    private UUID categoryId;
+    private String categoryName;
 }
