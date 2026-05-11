@@ -93,6 +93,7 @@ public class MerchantServiceImpl implements MerchantService {
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
         merchant.setIsActive(request.getIsActive());
         return merchantMapper.toResponse(merchantRepository.save(merchant));
+        // TODO: INVALIDATE MERCHANT SESSION UNTILL ADMIN RE-ACTIVATE THE MERCHANT ACCOUNT OR TTL FOR DEACTIVATION
     }
 
     private MerchantCategoryEntity findCategoryById(UUID categoryId) {

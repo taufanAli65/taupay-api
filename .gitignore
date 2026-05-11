@@ -35,3 +35,6 @@ build/
 # Secrets
 application-local.properties
 application.yaml
+
+# MinIO
+data/

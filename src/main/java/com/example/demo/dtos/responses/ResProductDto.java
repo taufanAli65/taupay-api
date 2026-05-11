@@ -11,6 +11,7 @@ public class ResProductDto {
     private Long price;
     private String description;
     private Boolean isActive;
+    private String imageUrl;
     private ResMerchantDto merchant;
     private ResProductCategoryDto category;
 }

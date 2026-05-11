@@ -6,12 +6,14 @@ import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.ProductCategoryEntity;
 import com.example.demo.entities.ProductEntity;
+import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.ProductMapper;
 import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.repositories.ProductCategoryRepository;
 import com.example.demo.repositories.ProductRepository;
+import com.example.demo.services.FileService;
 import com.example.demo.services.ProductService;
 import com.example.demo.utils.PartialUpdateUtils;
 import com.example.demo.utils.SecurityUtils;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,10 +31,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
+    private static final long MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+
     private final ProductRepository productRepository;
     private final MerchantRepository merchantRepository;
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductMapper productMapper;
+    private final FileService fileService;
 
     @Override
     public Page<ResProductDto> getAllProduct(int page, int size) {
@@ -66,7 +72,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ResCreateProductDto createProduct(ReqCreateProductDto request) {
+    public ResCreateProductDto createProduct(ReqCreateProductDto request, MultipartFile file) {
         MerchantEntity merchant = getMerchantByProfile();
         
         ProductCategoryEntity category = null;
@@ -77,6 +83,11 @@ public class ProductServiceImpl implements ProductService {
         
         ProductEntity product = productMapper.toEntity(request);
         product.setMerchant(merchant);
+
+        if (file != null) {
+            String imageName = uploadProductImage(file);
+            product.setImageName(imageName);
+        }
         product.setCategory(category);
 
         return productMapper.toCreateResponse(productRepository.save(product));
@@ -107,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request) {
+    public ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request, MultipartFile file) {
         MerchantEntity merchant = getMerchantByProfile();
         ProductEntity product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchant.getId())
                 .orElseThrow(() -> new DataNotFoundException("Product not found"));
@@ -118,7 +129,20 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new DataNotFoundException("Category not found"));
             product.setCategory(category);
         }
-        return productMapper.toCreateResponse(productRepository.save(product));
+
+        String oldImageName = product.getImageName();
+        if (file != null) {
+            String newImageName = uploadProductImage(file);
+            product.setImageName(newImageName);
+        }
+
+        ProductEntity savedProduct = productRepository.save(product);
+
+        if (file != null && oldImageName != null) {
+            deleteProductImage(oldImageName);
+        }
+
+        return productMapper.toCreateResponse(savedProduct);
     }
 
     @Override
@@ -161,5 +185,37 @@ public class ProductServiceImpl implements ProductService {
 
         return merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant Not Found"));
+    }
+
+    private String uploadProductImage(MultipartFile file) {
+        validateImage(file);
+        try {
+            return fileService.uploadFile(file);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to upload product image");
+        }
+    }
+
+    private void deleteProductImage(String imageName) {
+        try {
+            fileService.deleteFile(imageName);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to delete product image");
+        }
+    }
+
+    private void validateImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new BadRequestException("File is empty");
+        }
+
+        if (file.getSize() > MAX_IMAGE_SIZE_BYTES) {
+            throw new BadRequestException("File size must be <= 2 MB");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("File must be an image");
+        }
     }
 }
