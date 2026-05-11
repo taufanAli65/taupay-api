@@ -2,7 +2,6 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
-import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.ProductEntity;
@@ -107,8 +106,8 @@ public class ProductServiceImpl implements ProductService {
             product = productRepository.findByIdAndIsActiveTrue(id)
                     .orElseThrow(() -> new DataNotFoundException("Product not found"));
         } else {
-            UUID merchantId = SecurityUtils.getCurrentProfileId();
-            product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchantId)
+            MerchantEntity merchant = getMerchantByProfile();
+            product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchant.getId())
                     .orElseThrow(() -> new DataNotFoundException("Product not found"));
         }
 

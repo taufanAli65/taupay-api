@@ -15,5 +15,4 @@ public class ReqCreateProductDto {
     private Long price;
 
     private String description;
-    private Boolean isActive = true;
 }

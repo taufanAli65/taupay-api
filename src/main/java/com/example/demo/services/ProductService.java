@@ -2,7 +2,6 @@ package com.example.demo.services;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
-import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import org.springframework.data.domain.Page;
 
