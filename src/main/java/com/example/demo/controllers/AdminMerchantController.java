@@ -77,14 +77,27 @@ public class AdminMerchantController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/{id}/status")
-    @Operation(summary = "Update merchant status", description = "Activates or deactivates a merchant account.")
-    public ResponseEntity<BaseResponse<ResMerchantDto>> updateMerchantStatus(
-            @PathVariable("id") UUID id,
-            @Valid @RequestBody ReqMerchantStatusDto request
+    @PatchMapping("/{id}/deactivate")
+    @Operation(summary = "Deactivate merchant", description = "Deactivates a merchant account, setting isActive to false.")
+    public ResponseEntity<BaseResponse<Object>> deactivateMerchant(
+            @PathVariable("id") UUID id
     ) {
-        ResMerchantDto merchant = merchantService.updateMerchantStatus(id, request);
-        BaseResponse<ResMerchantDto> response = BaseResponse.success("Merchant Status Updated Successfully", merchant, null);
+        ReqMerchantStatusDto deactivatedMerchant = new ReqMerchantStatusDto();
+        deactivatedMerchant.setIsActive(false);
+        merchantService.updateMerchantStatus(id, deactivatedMerchant);
+        BaseResponse<Object> response = BaseResponse.success("Merchant Deactivated Successfully", null, null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/activate")
+    @Operation(summary = "Activate merchant", description = "Activates a merchant account, setting isActive to true.")
+    public ResponseEntity<BaseResponse<Object>> activateMerchant(
+            @PathVariable("id") UUID id
+    ) {
+        ReqMerchantStatusDto activatedMerchant = new ReqMerchantStatusDto();
+        activatedMerchant.setIsActive(true);
+        merchantService.updateMerchantStatus(id, activatedMerchant);
+        BaseResponse<Object> response = BaseResponse.success("Merchant Activated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
 
@@ -106,7 +119,7 @@ public class AdminMerchantController {
             @Valid @RequestBody ReqMerchantCategoryDto request
     ) {
         merchantCategoryService.updateMerchantCategoryName(id, request);
-        BaseResponse<Void> response = BaseResponse.success("Merchant Category Updated Successfully", null);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Updated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
 
@@ -116,7 +129,7 @@ public class AdminMerchantController {
             @PathVariable("id") UUID id
     ) {
         merchantCategoryService.deleteMerchantCategory(id);
-        BaseResponse<Void> response = BaseResponse.success("Merchant Category Deleted Successfully", null);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Deleted Successfully", null, null);
         return ResponseEntity.ok(response);
     }
 }
