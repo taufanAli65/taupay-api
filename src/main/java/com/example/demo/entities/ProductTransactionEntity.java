@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigInteger;
-
 @Entity
 @Table(name = "mst_product_transaction_histories")
 @Setter
@@ -23,7 +21,7 @@ public class ProductTransactionEntity extends BaseEntity {
     private String productName;
 
     @Column(name = "product_price_at_time", nullable = false)
-    private BigInteger productPrice;
+    private Long productPrice;
 
     @Column(nullable = false)
     private Integer quantity;
