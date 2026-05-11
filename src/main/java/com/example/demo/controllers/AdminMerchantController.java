@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@PreAuthorize("hasRole('SUPER_ADMIN')")
 @RequestMapping("/api/v1/admin/merchant")
 @RequiredArgsConstructor
 @Tag(name = "Admin Merchants", description = "Super admin endpoints for merchant and merchant category management.")

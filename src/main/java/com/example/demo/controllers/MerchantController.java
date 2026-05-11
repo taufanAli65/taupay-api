@@ -28,7 +28,6 @@ public class MerchantController {
     private final MerchantService merchantService;
     private final MerchantCategoryService merchantCategoryService;
 
-    @PreAuthorize("hasRole('MERCHANT')")
     @GetMapping({"", "/me"})
     @Operation(summary = "Get current merchant", description = "Returns the authenticated merchant profile from the JWT profile ID.")
     public ResponseEntity<BaseResponse<ResMerchantDto>> getCurrentMerchant() {
@@ -38,7 +37,6 @@ public class MerchantController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('MERCHANT')")
     @PutMapping({"", "/me"})
     @Operation(summary = "Update current merchant", description = "Updates the authenticated merchant profile.")
     public ResponseEntity<BaseResponse<ResMerchantDto>> updateCurrentMerchant(
