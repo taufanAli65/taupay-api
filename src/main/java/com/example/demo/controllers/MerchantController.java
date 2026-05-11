@@ -2,23 +2,29 @@ package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.responses.BaseResponse;
+import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.services.MerchantService;
+import com.example.demo.services.MerchantCategoryService;
 import com.example.demo.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/merchant/me")
+@RequestMapping("/api/v1/merchant")
 @RequiredArgsConstructor
 public class MerchantController {
     private final MerchantService merchantService;
+    private final MerchantCategoryService merchantCategoryService;
 
-    @GetMapping({"", "/"})
+    @PreAuthorize("hasRole('MERCHANT')")
+    @GetMapping({"", "/me"})
     public ResponseEntity<BaseResponse<ResMerchantDto>> getCurrentMerchant() {
         UUID merchantId = SecurityUtils.getCurrentProfileId();
         ResMerchantDto merchant = merchantService.getMerchantById(merchantId);
@@ -26,13 +32,31 @@ public class MerchantController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping({"", "/"})
+    @PreAuthorize("hasRole('MERCHANT')")
+    @PutMapping({"", "/me"})
     public ResponseEntity<BaseResponse<ResMerchantDto>> updateCurrentMerchant(
             @Valid @RequestBody ReqMerchantDto request
     ) {
         UUID merchantId = SecurityUtils.getCurrentProfileId();
         ResMerchantDto merchant = merchantService.updateMerchantById(merchantId, request);
         BaseResponse<ResMerchantDto> response = BaseResponse.success("Merchant Updated Successfully", merchant, null);
+        return ResponseEntity.ok(response);
+    }
+
+    // Merchant Category Start Here
+    @GetMapping({"", "/category"})
+    public ResponseEntity<BaseResponse<List<ResMerchantCategoryDto>>> getAllMerchantCategories() {
+        List<ResMerchantCategoryDto> merchantCategories = merchantCategoryService.getAllMerchantCategories();
+        BaseResponse<List<ResMerchantCategoryDto>> response = BaseResponse.success("Merchant Categories Retrieved Successfully", merchantCategories);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/category/{id}")
+    public ResponseEntity<BaseResponse<ResMerchantCategoryDto>> getMerchantCategoryById(
+            @PathVariable("id") UUID id
+    ) {
+        ResMerchantCategoryDto merchantCategory = merchantCategoryService.getMerchantCategoryById(id);
+        BaseResponse<ResMerchantCategoryDto> response = BaseResponse.success("Merchant Category Retrieved Successfully", merchantCategory);
         return ResponseEntity.ok(response);
     }
 }

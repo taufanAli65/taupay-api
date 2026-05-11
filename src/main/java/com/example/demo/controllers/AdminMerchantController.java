@@ -1,26 +1,32 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dtos.requests.ReqMerchantCategoryDto;
 import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
 import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
 import com.example.demo.dtos.responses.BaseResponse;
+import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.services.MerchantService;
+import com.example.demo.services.MerchantCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/merchants")
+@PreAuthorize("hasRole('SUPER_ADMIN')")
+@RequestMapping("/api/v1/admin/merchant")
 @RequiredArgsConstructor
 public class AdminMerchantController {
     private final MerchantService merchantService;
+    private final MerchantCategoryService merchantCategoryService;
 
     @PostMapping({"", "/"})
     public ResponseEntity<BaseResponse<ResMerchantDto>> createMerchant(
@@ -69,6 +75,35 @@ public class AdminMerchantController {
     ) {
         ResMerchantDto merchant = merchantService.updateMerchantStatus(id, request);
         BaseResponse<ResMerchantDto> response = BaseResponse.success("Merchant Status Updated Successfully", merchant, null);
+        return ResponseEntity.ok(response);
+    }
+
+    // Merchant Category Start Here
+    @PostMapping({"", "/category"})
+    public ResponseEntity<BaseResponse<ResMerchantCategoryDto>> createMerchantCategory(
+            @Valid @RequestBody ReqMerchantCategoryDto request
+    ) {
+        ResMerchantCategoryDto merchantCategory = merchantCategoryService.createMerchantCategory(request);
+        BaseResponse<ResMerchantCategoryDto> response = BaseResponse.success("Merchant Category Created Successfully", merchantCategory, null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/category/{id}")
+    public ResponseEntity<BaseResponse<Void>> updateMerchantCategoryName(
+            @PathVariable("id") UUID id,
+            @Valid @RequestBody ReqMerchantCategoryDto request
+    ) {
+        merchantCategoryService.updateMerchantCategoryName(id, request);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Updated Successfully", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/category/{id}")
+    public ResponseEntity<BaseResponse<Void>> deleteMerchantCategory(
+            @PathVariable("id") UUID id
+    ) {
+        merchantCategoryService.deleteMerchantCategory(id);
+        BaseResponse<Void> response = BaseResponse.success("Merchant Category Deleted Successfully", null);
         return ResponseEntity.ok(response);
     }
 }
