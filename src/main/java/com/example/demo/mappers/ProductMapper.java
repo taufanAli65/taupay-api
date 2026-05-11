@@ -2,14 +2,17 @@ package com.example.demo.mappers;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.responses.*;
-import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.ProductEntity;
-import com.example.demo.entities.UserEntity;
+import com.example.demo.services.FileService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ProductMapper {
+    private final FileService fileService;
+
     public ProductEntity toEntity(ReqCreateProductDto dto) {
         if (dto == null) {
             return null;
@@ -30,6 +33,7 @@ public class ProductMapper {
         response.setPrice(product.getPrice());
         response.setDescription(product.getDescription());
         response.setIsActive(product.getIsActive());
+
         response.setMerchantId(product.getMerchant().getId());
         return response;
     }
@@ -41,6 +45,14 @@ public class ProductMapper {
         response.setPrice(product.getPrice());
         response.setDescription(product.getDescription());
         response.setIsActive(product.getIsActive());
+
+        if (product.getImageName() != null) {
+            try {
+                response.setImageUrl(fileService.getFileUrl(product.getImageName()));
+            } catch (RuntimeException e) {
+                response.setImageUrl(null);
+            }
+        }
 
         if (merchant != null) {
             ResMerchantDto merchantDto = new ResMerchantDto();

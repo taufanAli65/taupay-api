@@ -28,4 +28,7 @@ public class ProductEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "merchant_id", referencedColumnName = "id")
     private MerchantEntity merchant;
+
+    @Column(name = "image_name")
+    private String imageName;
 }

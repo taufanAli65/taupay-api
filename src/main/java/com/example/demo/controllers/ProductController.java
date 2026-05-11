@@ -6,8 +6,10 @@ import com.example.demo.services.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,11 +40,12 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BaseResponse<ResCreateProductDto>> create(
-            @RequestBody @Valid ReqCreateProductDto request
+            @RequestPart("data") @Valid ReqCreateProductDto request,
+            @RequestPart(value = "file", required = false) MultipartFile file
     ) {
-        ResCreateProductDto product = productService.createProduct(request);
+        ResCreateProductDto product = productService.createProduct(request, file);
         return ResponseEntity.ok(BaseResponse.success("Product Created Successfully", product));
     }
 
@@ -54,11 +57,13 @@ public class ProductController {
         return ResponseEntity.ok(BaseResponse.success("Bulk Products Created Successfully", products));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BaseResponse<ResCreateProductDto>> update(
-            @PathVariable UUID id, @RequestBody @Valid ReqCreateProductDto request
+            @PathVariable UUID id,
+            @RequestPart("data") @Valid ReqCreateProductDto request,
+            @RequestPart(value = "file", required = false) MultipartFile file
     ) {
-        ResCreateProductDto product = productService.updateProduct(id, request);
+        ResCreateProductDto product = productService.updateProduct(id, request, file);
         return ResponseEntity.ok(BaseResponse.success("Product Updated Successfully", product));
     }
 
