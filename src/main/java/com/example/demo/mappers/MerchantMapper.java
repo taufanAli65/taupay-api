@@ -15,10 +15,10 @@ public class MerchantMapper {
         return ResMerchantDto.builder()
                 .id(merchant.getId())
                 .name(merchant.getName())
-                .email(merchant.getAccount().getEmail())
+                .email(merchant.getAccount() != null ? merchant.getAccount().getEmail() : null)
                 .address(merchant.getAddress())
-                .categoryId(merchant.getCategory().getId())
-                .categoryName(merchant.getCategory().getName())
+                .categoryId(merchant.getCategory() != null ? merchant.getCategory().getId() : null)
+                .categoryName(merchant.getCategory() != null ? merchant.getCategory().getName() : null)
                 .active(merchant.getIsActive())
                 .build();
     }
