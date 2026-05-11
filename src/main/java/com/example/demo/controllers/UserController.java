@@ -7,6 +7,10 @@ import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.services.UserService;
 import com.example.demo.utils.SecurityUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,11 +23,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "Endpoints for user profile access and administration.")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
     private final UserService userService;
 
     @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('USER') and @securityUtils.isCurrentProfileId(#id))")
     @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID", description = "Accessible to super admins or the user who owns the requested profile.")
     public ResponseEntity<BaseResponse<ResUserDto>> getUserById(
             @Valid @PathVariable("id") UUID id
     ) {
@@ -35,6 +42,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Returns the authenticated USER profile based on the JWT profile ID.")
     public ResponseEntity<BaseResponse<ResUserDto>> getCurrentUserInformation() {
         UUID userId = SecurityUtils.getCurrentProfileId();
         ResUserDto user = userService.getUserById(userId);
@@ -45,8 +53,9 @@ public class UserController {
 
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     @GetMapping("/")
+    @Operation(summary = "List users", description = "Returns a paginated list of all user profiles for super admins.")
     public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
-            @Valid ReqPaginationDto paginationDto
+            @ParameterObject @Valid ReqPaginationDto paginationDto
     ) {
         int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
         int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
@@ -58,6 +67,7 @@ public class UserController {
 
     @PreAuthorize("hasRole('USER')")
     @PatchMapping("/me")
+    @Operation(summary = "Update current user", description = "Partially updates the authenticated USER profile.")
     public ResponseEntity<BaseResponse<Void>> updateUserInformation(
             @Valid @RequestBody ReqUserUpdateDto user
     ) {
