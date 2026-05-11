@@ -112,13 +112,12 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchant.getId())
                 .orElseThrow(() -> new DataNotFoundException("Product not found"));
 
-        ProductCategoryEntity category = null;
         PartialUpdateUtils.copyNonNullProperties(request, product);
         if (request.getCategoryId() != null) {
-            category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
+            ProductCategoryEntity category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
                     .orElseThrow(() -> new DataNotFoundException("Category not found"));
+            product.setCategory(category);
         }
-        product.setCategory(category);
         return productMapper.toCreateResponse(productRepository.save(product));
     }
 

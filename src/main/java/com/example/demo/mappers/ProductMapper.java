@@ -61,7 +61,8 @@ public class ProductMapper {
         if (product.getCategory() != null) {
             ResProductCategoryDto categoryDto = new ResProductCategoryDto();
             categoryDto.setId(product.getCategory().getId());
-            categoryDto.setName(product.getName());
+            categoryDto.setName(product.getCategory().getName());
+            response.setCategory(categoryDto);
         }
 
         return response;

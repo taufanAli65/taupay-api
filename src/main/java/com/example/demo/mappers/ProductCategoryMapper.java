@@ -18,10 +18,10 @@ public class ProductCategoryMapper {
         return entity;
     }
 
-    public ResProductCategoryDto toProductCategoryResponse(ProductCategoryEntity product, MerchantEntity merchant) {
+    public ResProductCategoryDto toProductCategoryResponse(ProductCategoryEntity category, MerchantEntity merchant) {
         ResProductCategoryDto response = new ResProductCategoryDto();
-        response.setId(product.getId());
-        response.setName(product.getName());
+        response.setId(category.getId());
+        response.setName(category.getName());
         response.setMerchantId(merchant.getId());
         response.setMerchantName(merchant.getName());
         return response;

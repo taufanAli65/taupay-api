@@ -1,9 +1,7 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.requests.ReqProductCategoryDto;
 import com.example.demo.dtos.responses.BaseResponse;
-import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductCategoryDto;
 import com.example.demo.services.ProductCategoryService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -50,8 +48,8 @@ public class ProductCategoryController {
     public ResponseEntity<BaseResponse<ResProductCategoryDto>> update(
             @PathVariable UUID id, @RequestBody @Valid ReqProductCategoryDto request
     ) {
-        ResProductCategoryDto product = productCategoryService.updateProductCategory(id, request);
-        return ResponseEntity.ok(BaseResponse.success("Category Updated Successfully", product));
+        ResProductCategoryDto category = productCategoryService.updateProductCategory(id, request);
+        return ResponseEntity.ok(BaseResponse.success("Category Updated Successfully", category));
     }
 
     @DeleteMapping("/{id}")
