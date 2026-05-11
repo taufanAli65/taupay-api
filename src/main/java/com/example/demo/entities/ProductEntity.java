@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigInteger;
 
 @Entity
 @Table(name = "mst_products")
@@ -19,7 +18,7 @@ public class ProductEntity extends BaseEntity {
     private String name;
 
     @Column(nullable = false)
-    private BigInteger price;
+    private Long price;
 
     private String description;
 

@@ -31,6 +31,19 @@ public class SecurityUtils {
         return null;
     }
 
+    public static String getCurrentUserRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && !authentication.getAuthorities().isEmpty()) {
+            return authentication.getAuthorities().iterator().next().getAuthority();
+        }
+        return null;
+    }
+
+    public static boolean hasRole(String role) {
+        String currentRole = getCurrentUserRole();
+        return currentRole != null && currentRole.equals("ROLE_" + role);
+    }
+
     public boolean isCurrentProfileId(UUID profileId) {
         return profileId != null && profileId.equals(getCurrentProfileId());
     }

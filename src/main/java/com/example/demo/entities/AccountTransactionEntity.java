@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigInteger;
-
 @Entity
 @Table(name = "mst_account_transaction_histories")
 @Setter
@@ -24,7 +22,7 @@ public class AccountTransactionEntity extends BaseEntity {
     private UserEntity requester;
 
     @Column(nullable = false)
-    private BigInteger amount;
+    private Long amount;
 
     @Column(name = "is_success", nullable = false)
     private Boolean isSuccess;

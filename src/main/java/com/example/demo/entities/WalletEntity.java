@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigInteger;
 import java.util.UUID;
 
 @Entity
@@ -26,5 +25,5 @@ public class WalletEntity extends BaseEntity {
     @Column(name = "owner_type", nullable = false)
     private OwnerTypeEnum ownerType;
 
-    private BigInteger amount;
+    private Long amount;
 }
