@@ -39,7 +39,9 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/api/v1/merchant/category/**").permitAll()
                         .requestMatchers("/api/v1/merchant/**").hasRole("MERCHANT")
                         .requestMatchers("/api/v1/user/**").authenticated()
                         .anyRequest().authenticated()

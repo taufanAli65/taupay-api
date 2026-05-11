@@ -8,6 +8,8 @@ import com.example.demo.dtos.responses.ResLoginDto;
 import com.example.demo.dtos.responses.ResRegisterDto;
 import com.example.demo.dtos.responses.ResRegisterMerchantDto;
 import com.example.demo.services.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Public endpoints for account registration and login.")
 public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
+    @Operation(summary = "Register a user", description = "Creates a new account with the USER role.")
     public ResponseEntity<BaseResponse<ResRegisterDto>> register(
             @Valid @RequestBody ReqRegisterDto request
     ) {
@@ -32,6 +36,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/merchant")
+    @Operation(summary = "Register a merchant", description = "Creates a new merchant account and profile.")
     public ResponseEntity<BaseResponse<ResRegisterMerchantDto>> registerMerchant(
             @Valid @RequestBody ReqRegisterMerchantDto request
     ) {
@@ -41,6 +46,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticates a user, merchant, or super admin and returns a JWT.")
     public ResponseEntity<BaseResponse<ResLoginDto>> login(
             @Valid @RequestBody ReqLoginDto request
     ) {
