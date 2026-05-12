@@ -12,6 +12,7 @@ public class ResProductDto {
     private String description;
     private Boolean isActive;
     private String imageUrl;
+    private Integer stock;
     private ResMerchantDto merchant;
     private ResProductCategoryDto category;
 }

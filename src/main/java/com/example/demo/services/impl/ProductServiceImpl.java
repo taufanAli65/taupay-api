@@ -6,18 +6,21 @@ import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.ProductCategoryEntity;
 import com.example.demo.entities.ProductEntity;
+import com.example.demo.entities.ProductQuantityEntity;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.ProductMapper;
 import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.repositories.ProductCategoryRepository;
+import com.example.demo.repositories.ProductQuantityRepository;
 import com.example.demo.repositories.ProductRepository;
 import com.example.demo.services.FileService;
 import com.example.demo.services.ProductService;
 import com.example.demo.utils.PartialUpdateUtils;
 import com.example.demo.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private static final long MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
@@ -36,6 +40,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final MerchantRepository merchantRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final ProductQuantityRepository productQuantityRepository;
     private final ProductMapper productMapper;
     private final FileService fileService;
 
@@ -90,6 +95,11 @@ public class ProductServiceImpl implements ProductService {
         }
         product.setCategory(category);
 
+        ProductQuantityEntity quantity = new ProductQuantityEntity();
+        quantity.setProduct(product);
+        quantity.setStock(request.getStock());
+        product.setQuantityEntity(quantity);
+
         return productMapper.toCreateResponse(productRepository.save(product));
     }
 
@@ -108,6 +118,12 @@ public class ProductServiceImpl implements ProductService {
             ProductEntity product = productMapper.toEntity(request);
             product.setMerchant(merchant);
             product.setCategory(category);
+
+            ProductQuantityEntity quantity = new ProductQuantityEntity();
+            quantity.setProduct(product);
+            quantity.setStock(request.getStock() != null ? request.getStock() : 0);
+            product.setQuantityEntity(quantity);
+
             return product;
         }).toList();
 
@@ -128,6 +144,16 @@ public class ProductServiceImpl implements ProductService {
             ProductCategoryEntity category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
                     .orElseThrow(() -> new DataNotFoundException("Category not found"));
             product.setCategory(category);
+        }
+
+        if (request.getStock() != null) {
+            ProductQuantityEntity quantity = product.getQuantityEntity();
+            if (quantity == null) {
+                quantity = new ProductQuantityEntity();
+                quantity.setProduct(product);
+                product.setQuantityEntity(quantity);
+            }
+            quantity.setStock(request.getStock());
         }
 
         String oldImageName = product.getImageName();
@@ -192,7 +218,8 @@ public class ProductServiceImpl implements ProductService {
         try {
             return fileService.uploadFile(file);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to upload product image");
+            log.error("Error uploading product image: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to upload product image: " + e.getMessage(), e);
         }
     }
 
@@ -200,7 +227,8 @@ public class ProductServiceImpl implements ProductService {
         try {
             fileService.deleteFile(imageName);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to delete product image");
+            log.error("Error deleting product image: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to delete product image: " + e.getMessage(), e);
         }
     }
 
