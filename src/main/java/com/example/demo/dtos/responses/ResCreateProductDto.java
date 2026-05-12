@@ -14,4 +14,5 @@ public class ResCreateProductDto {
     private UUID merchantId;
     private UUID categoryId;
     private String categoryName;
+    private Integer stock;
 }
