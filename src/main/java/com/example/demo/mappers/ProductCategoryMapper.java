@@ -7,23 +7,35 @@ import com.example.demo.entities.ProductCategoryEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProductCategoryMapper {
+public class ProductCategoryMapper extends BaseMapper<ProductCategoryEntity, ReqProductCategoryDto, ResProductCategoryDto> {
+    
+    @Override
     public ProductCategoryEntity toEntity(ReqProductCategoryDto dto) {
         if (dto == null) {
             return null;
         }
 
         ProductCategoryEntity entity = new ProductCategoryEntity();
-        entity.setName(dto.getName());
+        map(dto, entity);
         return entity;
     }
 
-    public ResProductCategoryDto toProductCategoryResponse(ProductCategoryEntity category, MerchantEntity merchant) {
+    @Override
+    public ResProductCategoryDto toResponse(ProductCategoryEntity category) {
+        if (category == null) {
+            return null;
+        }
         ResProductCategoryDto response = new ResProductCategoryDto();
-        response.setId(category.getId());
-        response.setName(category.getName());
-        response.setMerchantId(merchant.getId());
-        response.setMerchantName(merchant.getName());
+        map(category, response);
+        return response;
+    }
+
+    public ResProductCategoryDto toProductCategoryResponse(ProductCategoryEntity category, MerchantEntity merchant) {
+        ResProductCategoryDto response = toResponse(category);
+        if (merchant != null && response != null) {
+            response.setMerchantId(merchant.getId());
+            response.setMerchantName(merchant.getName());
+        }
         return response;
     }
 }

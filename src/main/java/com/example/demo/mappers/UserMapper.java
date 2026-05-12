@@ -7,32 +7,36 @@ import com.example.demo.entities.UserEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserMapper {
+public class UserMapper extends BaseMapper<UserEntity, ReqRegisterDto, ResRegisterDto> {
+    
+    @Override
     public UserEntity toEntity(ReqRegisterDto dto) {
         if (dto == null) {
             return null;
         }
 
         UserEntity entity = new UserEntity();
-        entity.setFirstName(dto.getFirstName());
-        entity.setLastName(dto.getLastName());
-        entity.setAddress(dto.getAddress());
-        entity.setBirthDate(dto.getBirthDate());
+        map(dto, entity);
         entity.setIsActive(true);
         return entity;
     }
 
-    public ResRegisterDto toRegisterResponse(UserEntity user, AccountEntity account) {
-        ResRegisterDto response = new ResRegisterDto();
-        response.setFirstName(user.getFirstName());
-        response.setLastName(user.getLastName());
-        response.setAddress(user.getAddress());
-        response.setBirthDate(String.valueOf(user.getBirthDate()));
-
-        if (account != null) {
-            response.setEmail(account.getEmail());
+    @Override
+    public ResRegisterDto toResponse(UserEntity user) {
+        if (user == null) {
+            return null;
         }
+        ResRegisterDto response = new ResRegisterDto();
+        map(user, response);
+        response.setBirthDate(String.valueOf(user.getBirthDate()));
+        return response;
+    }
 
+    public ResRegisterDto toRegisterResponse(UserEntity user) {
+        ResRegisterDto response = toResponse(user);
+        if (user.getAccount() != null && response != null) {
+            response.setEmail(user.getAccount().getEmail());
+        }
         return response;
     }
 }
