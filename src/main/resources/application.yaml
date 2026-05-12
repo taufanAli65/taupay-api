@@ -31,6 +31,8 @@ jwt:
 app:
   cache:
     merchant-category-ttl: 1h
+  transaction:
+    ttl: 5m
 
 minio:
   endpoint: http://localhost:9000

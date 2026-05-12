@@ -13,7 +13,6 @@ import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.ProductMapper;
 import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.repositories.ProductCategoryRepository;
-import com.example.demo.repositories.ProductQuantityRepository;
 import com.example.demo.repositories.ProductRepository;
 import com.example.demo.services.FileService;
 import com.example.demo.services.ProductService;
@@ -40,7 +39,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final MerchantRepository merchantRepository;
     private final ProductCategoryRepository productCategoryRepository;
-    private final ProductQuantityRepository productQuantityRepository;
     private final ProductMapper productMapper;
     private final FileService fileService;
 
