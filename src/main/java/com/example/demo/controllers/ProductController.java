@@ -3,6 +3,9 @@ package com.example.demo.controllers;
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.responses.*;
 import com.example.demo.services.ProductService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +20,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
+@Tag(name = "Products", description = "Endpoints for product management and lookups.")
+@SecurityRequirement(name = "bearerAuth")
 public class ProductController {
     private final ProductService productService;
 

@@ -4,6 +4,9 @@ import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.services.ProductService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/products")
 @RequiredArgsConstructor
+@Tag(name = "Admin Products", description = "Super admin endpoints for product management and lookups.")
+@SecurityRequirement(name = "bearerAuth")
 public class AdminProductController {
     private final ProductService productService;
 
