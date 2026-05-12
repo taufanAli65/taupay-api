@@ -9,7 +9,7 @@ import com.example.demo.dtos.responses.ResTransactionDto;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface TransactionService {
-    ResTransactionDto createTransaction(ReqTransactionDto request, UUID merchant_id);
+    ResTransactionDto createTransaction(ReqTransactionDto request, UUID merchantId);
 
     SseEmitter subscribeToTransactionEvents(String trxId);
 
