@@ -31,4 +31,11 @@ public class MerchantEntity extends BaseEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @PrePersist
+    private void generateQrCode() {
+        if (this.qrCode == null) {
+            this.qrCode = "MERCHANT-" + this.getId();
+        }
+    }
 }
