@@ -20,10 +20,6 @@ public class ResTransactionDto {
     @Schema(description = "ID of the merchant", example = "4e3d11ea-2b75-4c45-bfb7-bbc4f8ab1c29")
     private String merchantId;
 
-    @JsonProperty("user_id")
-    @Schema(description = "ID of the user", example = "670f046a-ad29-4380-934d-8f3bb8d7778a")
-    private String userId;
-
     @JsonProperty("created_at")
     @Schema(description = "Timestamp when the transaction was created", example = "2026-05-12T12:00:00")
     private LocalDateTime createdAt;
