@@ -6,21 +6,32 @@ import com.example.demo.entities.MerchantEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MerchantMapper {
+public class MerchantMapper extends BaseMapper<MerchantEntity, Object, ResMerchantDto> {
+
+    @Override
+    public MerchantEntity toEntity(Object dto) {
+        return null; // Not implemented
+    }
+
+    @Override
     public ResMerchantDto toResponse(MerchantEntity merchant) {
         if (merchant == null) {
             return null;
         }
-
-        return ResMerchantDto.builder()
-                .id(merchant.getId())
-                .name(merchant.getName())
-                .email(merchant.getAccount() != null ? merchant.getAccount().getEmail() : null)
-                .address(merchant.getAddress())
-                .categoryId(merchant.getCategory() != null ? merchant.getCategory().getId() : null)
-                .categoryName(merchant.getCategory() != null ? merchant.getCategory().getName() : null)
-                .active(merchant.getIsActive())
-                .build();
+        ResMerchantDto response = new ResMerchantDto();
+        map(merchant, response);
+        response.setActive(merchant.getIsActive());
+        
+        if (merchant.getAccount() != null) {
+            response.setEmail(merchant.getAccount().getEmail());
+        }
+        
+        if (merchant.getCategory() != null) {
+            response.setCategoryId(merchant.getCategory().getId());
+            response.setCategoryName(merchant.getCategory().getName());
+        }
+        
+        return response;
     }
 
     public ResRegisterMerchantDto toRegisterResponse(MerchantEntity merchant) {
@@ -29,10 +40,12 @@ public class MerchantMapper {
         }
 
         ResRegisterMerchantDto response = new ResRegisterMerchantDto();
-        response.setId(merchant.getId());
-        response.setName(merchant.getName());
-        response.setEmail(merchant.getAccount().getEmail());
-        response.setAddress(merchant.getAddress());
+        map(merchant, response);
+        
+        if (merchant.getAccount() != null) {
+            response.setEmail(merchant.getAccount().getEmail());
+        }
+        
         if (merchant.getCategory() != null) {
             response.setCategory(merchant.getCategory().getName());
         }
@@ -45,10 +58,7 @@ public class MerchantMapper {
         }
 
         ResRegisterMerchantDto response = new ResRegisterMerchantDto();
-        response.setId(merchant.getId());
-        response.setName(merchant.getName());
-        response.setEmail(merchant.getEmail());
-        response.setAddress(merchant.getAddress());
+        map(merchant, response);
         response.setCategory(merchant.getCategoryName());
         return response;
     }

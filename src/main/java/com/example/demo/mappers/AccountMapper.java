@@ -14,36 +14,39 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class AccountMapper {
+public class AccountMapper extends BaseMapper<AccountEntity, Object, Object> {
     private final UserMapper userMapper;
     private final MerchantMapper merchantMapper;
 
-    public AccountEntity toEntity(ReqRegisterDto dto) {
-        if (dto == null) {
-            return null;
-        }
-
+    @Override
+    public AccountEntity toEntity(Object dto) {
+        if (dto == null) return null;
         AccountEntity entity = new AccountEntity();
-        entity.setEmail(dto.getEmail());
-        entity.setRole(RoleEnum.USER);
+        map(dto, entity);
+        return entity;
+    }
+
+    @Override
+    public Object toResponse(AccountEntity entity) {
+        return null; // Not implemented
+    }
+
+    public AccountEntity toEntity(ReqRegisterDto dto) {
+        AccountEntity entity = toEntity((Object) dto);
+        if (entity != null) entity.setRole(RoleEnum.USER);
         return entity;
     }
 
     public AccountEntity toEntity(ReqRegisterMerchantDto dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        AccountEntity entity = new AccountEntity();
-        entity.setEmail(dto.getEmail());
-        entity.setRole(RoleEnum.MERCHANT);
+        AccountEntity entity = toEntity((Object) dto);
+        if (entity != null) entity.setRole(RoleEnum.MERCHANT);
         return entity;
     }
 
     public ResLoginDto toLoginResponse(AccountEntity account, UserEntity user, String token) {
         ResLoginDto response = new ResLoginDto();
         if (user != null) {
-            ResRegisterDto userDto = userMapper.toRegisterResponse(user, account);
+            ResRegisterDto userDto = userMapper.toRegisterResponse(user);
             response.setUser(userDto);
         }
         response.setToken(token);
@@ -51,7 +54,7 @@ public class AccountMapper {
         return response;
     }
 
-    public ResLoginDto toLoginResponse(AccountEntity account, MerchantEntity merchant, String token) {
+    public ResLoginDto toLoginResponse(MerchantEntity merchant, String token) {
         ResLoginDto response = new ResLoginDto();
         if (merchant != null) {
             ResRegisterMerchantDto merchantDto = merchantMapper.toRegisterResponse(merchant);

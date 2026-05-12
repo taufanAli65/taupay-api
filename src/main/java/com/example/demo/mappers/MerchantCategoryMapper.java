@@ -5,12 +5,20 @@ import com.example.demo.entities.MerchantCategoryEntity;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MerchantCategoryMapper {
+public class MerchantCategoryMapper extends BaseMapper<MerchantCategoryEntity, Object, ResMerchantCategoryDto> {
+    
+    @Override
+    public MerchantCategoryEntity toEntity(Object dto) {
+        return null; // Not implemented as not needed currently
+    }
+
+    @Override
     public ResMerchantCategoryDto toResponse(MerchantCategoryEntity merchantCategory) {
         if (merchantCategory == null) {
             return null;
         }
-
-        return new ResMerchantCategoryDto(merchantCategory.getId(), merchantCategory.getName());
+        ResMerchantCategoryDto response = new ResMerchantCategoryDto(null, null);
+        map(merchantCategory, response);
+        return response;
     }
 }

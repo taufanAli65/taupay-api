@@ -35,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
-    private final MerchantRepository merchantRepository;
     private final MerchantService merchantService;
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
@@ -53,20 +52,24 @@ public class AuthServiceImpl implements AuthService {
         }
 
         if (account.getRole() == RoleEnum.USER) {
-            UserEntity user = userRepository.findByAccountId(account.getId())
-                    .orElseThrow(() -> new DataNotFoundException("User profile not found"));
+            UserEntity user = account.getUser();
+            if (user == null) {
+                throw new DataNotFoundException("User profile not found");
+            }
             String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), user.getId());
             return accountMapper.toLoginResponse(account, user, token);
         }
 
         if (account.getRole() == RoleEnum.MERCHANT) {
-            MerchantEntity merchant = merchantRepository.findByAccountId(account.getId())
-                    .orElseThrow(() -> new DataNotFoundException("Merchant profile not found"));
+            MerchantEntity merchant = account.getMerchant();
+            if (merchant == null) {
+                throw new DataNotFoundException("Merchant profile not found");
+            }
             if (!Boolean.TRUE.equals(merchant.getIsActive())) {
                 throw new UnauthorizedException("Merchant account is inactive");
             }
             String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), merchant.getId());
-            return accountMapper.toLoginResponse(account, merchant, token);
+            return accountMapper.toLoginResponse(merchant, token);
         }
 
         if (account.getRole() == RoleEnum.SUPER_ADMIN) {
@@ -91,8 +94,7 @@ public class AuthServiceImpl implements AuthService {
 
         AccountEntity savedAccount = accountRepository.save(newAccount);
         newUser.setAccount(savedAccount);
-        UserEntity savedUser = userRepository.save(newUser);
-        return userMapper.toRegisterResponse(savedUser, savedAccount);
+        return userMapper.toRegisterResponse(userRepository.save(newUser));
     }
 
     @Override

@@ -22,4 +22,10 @@ public class AccountEntity extends BaseEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private RoleEnum role;
+
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    private UserEntity user;
+
+    @OneToOne(mappedBy = "account", fetch = FetchType.LAZY)
+    private MerchantEntity merchant;
 }

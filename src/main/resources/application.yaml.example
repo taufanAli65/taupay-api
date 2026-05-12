@@ -31,3 +31,10 @@ app:
 jwt:
   secret: your_secret_key
   expiration: 86400000
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: my-bucket
+  public-url: http://localhost:9000

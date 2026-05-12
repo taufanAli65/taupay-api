@@ -214,7 +214,7 @@ public class ProductServiceImpl implements ProductService {
     private String uploadProductImage(MultipartFile file) {
         validateImage(file);
         try {
-            return fileService.uploadFile(file);
+            return fileService.uploadFile(file, "products");
         } catch (Exception e) {
             log.error("Error uploading product image: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to upload product image: " + e.getMessage(), e);
@@ -223,7 +223,7 @@ public class ProductServiceImpl implements ProductService {
 
     private void deleteProductImage(String imageName) {
         try {
-            fileService.deleteFile(imageName);
+            fileService.deleteFile("products", imageName);
         } catch (Exception e) {
             log.error("Error deleting product image: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to delete product image: " + e.getMessage(), e);

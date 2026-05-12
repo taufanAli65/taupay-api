@@ -22,12 +22,17 @@ public class FileService {
     @Value("${minio.bucket}")
     private String bucketName;
 
-    public String uploadFile(MultipartFile file) throws Exception {
+    @Value("${minio.public-url}")
+    private String publicUrl;
+
+    public String uploadFile(MultipartFile file, String folder) throws Exception {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        String objectName = folder + "/" + fileName;
+        
         minioClient.putObject(
             PutObjectArgs.builder()
                 .bucket(bucketName)
-                .object(fileName)
+                .object(objectName)
                 .stream(file.getInputStream(), file.getSize(), -1)
                 .contentType(file.getContentType())
                 .build()
@@ -35,13 +40,13 @@ public class FileService {
         return fileName;
     }
     
-    public String getFileUrl(String fileName) {
+    public String getFileUrl(String folder, String fileName) {
         try {
             return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
                     .bucket(bucketName)
-                    .object(fileName)
+                    .object(folder + "/" + fileName)
                     .expiry(1, TimeUnit.HOURS)
                     .build()
             );
@@ -50,11 +55,16 @@ public class FileService {
         }
     }
 
-    public void deleteFile(String fileName) throws Exception {
+    public String getPublicUrl(String folder, String fileName) {
+        if (fileName == null) return null;
+        return publicUrl + "/" + bucketName + "/" + folder + "/" + fileName;
+    }
+
+    public void deleteFile(String folder, String fileName) throws Exception {
         minioClient.removeObject(
             RemoveObjectArgs.builder()
                 .bucket(bucketName)
-                .object(fileName)
+                .object(folder + "/" + fileName)
                 .build()
         );
     }

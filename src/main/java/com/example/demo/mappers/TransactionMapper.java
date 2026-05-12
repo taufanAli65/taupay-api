@@ -15,7 +15,26 @@ import com.example.demo.entities.ProductTransactionEntity;
 import com.example.demo.entities.UserEntity;
 
 @Component
-public class TransactionMapper {
+public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Object, ResTransactionDto> {
+    
+    @Override
+    public AccountTransactionEntity toEntity(Object dto) {
+        return null; // Not implemented as transaction creation uses multiple inputs
+    }
+
+    @Override
+    public ResTransactionDto toResponse(AccountTransactionEntity entity) {
+        if (entity == null) return null;
+        ResTransactionDto response = new ResTransactionDto();
+        response.setTrxId(entity.getId() != null ? entity.getId().toString() : null);
+        if (entity.getReceiver() != null) {
+            response.setMerchantId(entity.getReceiver().getId().toString());
+        }
+        response.setCreatedAt(entity.getCreatedAt());
+        response.setTotal(BigDecimal.valueOf(entity.getAmount()));
+        return response;
+    }
+
     public ResTransactionDto.ProductItem toProductItem(ProductEntity product, Integer quantity) {
         ResTransactionDto.ProductItem item = new ResTransactionDto.ProductItem();
         item.setProductId(product.getId().toString());

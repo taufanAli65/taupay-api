@@ -10,29 +10,44 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ProductMapper {
+public class ProductMapper extends BaseMapper<ProductEntity, ReqCreateProductDto, ResProductDto> {
     private final FileService fileService;
 
+    @Override
     public ProductEntity toEntity(ReqCreateProductDto dto) {
         if (dto == null) {
             return null;
         }
 
         ProductEntity entity = new ProductEntity();
-        entity.setName(dto.getName());
-        entity.setPrice(dto.getPrice());
-        entity.setDescription(dto.getDescription());
+        map(dto, entity);
         entity.setIsActive(true);
         return entity;
     }
 
+    @Override
+    public ResProductDto toResponse(ProductEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        ResProductDto response = new ResProductDto();
+        map(entity, response);
+        
+        if (entity.getQuantityEntity() != null) {
+            response.setStock(entity.getQuantityEntity().getStock());
+        }
+
+        if (entity.getImageName() != null) {
+            response.setImageUrl(fileService.getPublicUrl("products", entity.getImageName()));
+        }
+        
+        return response;
+    }
+
     public ResCreateProductDto toCreateResponse(ProductEntity product) {
+        if (product == null) return null;
         ResCreateProductDto response = new ResCreateProductDto();
-        response.setId(product.getId());
-        response.setName(product.getName());
-        response.setPrice(product.getPrice());
-        response.setDescription(product.getDescription());
-        response.setIsActive(product.getIsActive());
+        map(product, response);
 
         if (product.getQuantityEntity() != null) {
             response.setStock(product.getQuantityEntity().getStock());
@@ -47,31 +62,13 @@ public class ProductMapper {
     }
 
     public ResProductDto toProductResponse(ProductEntity product, MerchantEntity merchant) {
-        ResProductDto response = new ResProductDto();
-        response.setId(product.getId());
-        response.setName(product.getName());
-        response.setPrice(product.getPrice());
-        response.setDescription(product.getDescription());
-        response.setIsActive(product.getIsActive());
-
-        if (product.getQuantityEntity() != null) {
-            response.setStock(product.getQuantityEntity().getStock());
-        }
-
-        if (product.getImageName() != null) {
-            try {
-                response.setImageUrl(fileService.getFileUrl(product.getImageName()));
-            } catch (RuntimeException e) {
-                response.setImageUrl(null);
-            }
-        }
+        ResProductDto response = toResponse(product);
+        if (response == null) return null;
 
         if (merchant != null) {
             ResMerchantDto merchantDto = new ResMerchantDto();
-            merchantDto.setId(merchant.getId());
-            merchantDto.setName(merchant.getName());
+            map(merchant, merchantDto);
             merchantDto.setEmail(merchant.getAccount().getEmail());
-            merchantDto.setAddress(merchant.getAddress());
             merchantDto.setCategoryName(merchant.getCategory().getName());
             merchantDto.setCategoryId(merchant.getCategory().getId());
             merchantDto.setActive(merchant.getIsActive());
@@ -80,8 +77,7 @@ public class ProductMapper {
 
         if (product.getCategory() != null) {
             ResProductCategoryDto categoryDto = new ResProductCategoryDto();
-            categoryDto.setId(product.getCategory().getId());
-            categoryDto.setName(product.getCategory().getName());
+            map(product.getCategory(), categoryDto);
             response.setCategory(categoryDto);
         }
 
