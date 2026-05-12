@@ -35,7 +35,7 @@ public class ResTransactionDto {
     private BigDecimal total;
 
     @Data
-    @Schema(name = "ReqTransactionProductItem", description = "Details of a product in the transaction.")
+    @Schema(name = "ResTransactionProductItem", description = "Details of a product in the transaction.")
     public static class ProductItem {
 
         @JsonProperty("product_id")
