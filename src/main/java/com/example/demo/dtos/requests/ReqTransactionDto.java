@@ -14,9 +14,6 @@ public class ReqTransactionDto {
     @Schema(description = "List of products purchased")
     private List<ProductItem> products;
 
-    @Schema(description = "Total transaction amount", example = "65000")
-    private BigDecimal total;
-
     @Data
     @Schema(name = "ReqTransactionProductItem", description = "Details of a product in the transaction.")
     public static class ProductItem {
