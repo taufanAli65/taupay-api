@@ -26,9 +26,6 @@ public class MerchantEntity extends BaseEntity {
 
     private String address;
 
-    @Column(name = "qr_code")
-    private String qrCode;
-
     @Column(name = "is_active")
     private Boolean isActive = true;
 }
