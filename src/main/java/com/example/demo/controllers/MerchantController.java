@@ -4,17 +4,22 @@ import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
+import com.example.demo.dtos.responses.ResPaginationDto;
+import com.example.demo.dtos.responses.ResTransactionHistoryDto;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.MerchantCategoryService;
+import com.example.demo.services.TransactionService;
 import com.example.demo.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +31,7 @@ import java.util.UUID;
 public class MerchantController {
     private final MerchantService merchantService;
     private final MerchantCategoryService merchantCategoryService;
+    private final TransactionService transactionService;
 
     @GetMapping({"", "/me"})
     @Operation(summary = "Get current merchant", description = "Returns the authenticated merchant profile from the JWT profile ID.")
@@ -64,5 +70,19 @@ public class MerchantController {
         ResMerchantCategoryDto merchantCategory = merchantCategoryService.getMerchantCategoryById(id);
         BaseResponse<ResMerchantCategoryDto> response = BaseResponse.success("Merchant Category Retrieved Successfully", merchantCategory);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/transactions")
+    @Operation(summary = "Get transaction history", description = "Returns a paginated list of transactions for the current merchant.")
+    public ResponseEntity<BaseResponse<List<ResTransactionHistoryDto>>> getTransactionHistory(
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(required = false) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        UUID merchantId = SecurityUtils.getCurrentProfileId();
+        Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(merchantId, startDate, endDate, page, size, true);
+        ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber());
+        return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
     }
 }

@@ -12,7 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResTransactionHistoryDto {
-    private UUID trxId;
+    private UUID historyId;
     private Long amount;
     private String counterpartyName;
     private String category;

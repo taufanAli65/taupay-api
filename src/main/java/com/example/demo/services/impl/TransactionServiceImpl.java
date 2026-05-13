@@ -1,5 +1,6 @@
 package com.example.demo.services.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +8,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -14,6 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.example.demo.dtos.requests.ReqTransactionCallbackDto;
 import com.example.demo.dtos.requests.ReqTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionDto;
+import com.example.demo.dtos.responses.ResTransactionHistoryDto;
 import com.example.demo.entities.AccountProductTransactionEntity;
 import com.example.demo.entities.AccountTransactionEntity;
 import com.example.demo.entities.MerchantEntity;
@@ -185,6 +190,26 @@ public class TransactionServiceImpl implements TransactionService {
 
         notifySse(request.getTrxId(), "PAID", payload.getTotal());
         transactionCacheService.evict(request.getTrxId());
+    }
+
+    @Override
+    public Page<ResTransactionHistoryDto> getTransactionHistory(
+            UUID profileId, LocalDate startDate, LocalDate endDate, int page, int size, boolean isMerchant
+    ) {
+        
+        LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.now().minusDays(30);
+        LocalDateTime end = (endDate != null) ? endDate.atTime(23, 59, 59) : LocalDateTime.now();
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AccountTransactionEntity> transactionPage;
+
+        if (isMerchant) {
+            transactionPage = accountTransactionRepository.findAllByReceiverIdAndCreatedAtBetween(profileId, start, end, pageable);
+        } else {
+            transactionPage = accountTransactionRepository.findAllByRequesterIdAndCreatedAtBetween(profileId, start, end, pageable);
+        }
+
+        return transactionPage.map(entity -> transactionMapper.toHistoryResponse(entity, isMerchant));
     }
 
     private void notifySse(String trxId, String status, Long total) {
