@@ -7,6 +7,7 @@ import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.MerchantCategoryEntity;
 import com.example.demo.entities.MerchantEntity;
+import com.example.demo.entities.OwnerTypeEnum;
 import com.example.demo.entities.RoleEnum;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.DuplicateResourceException;
@@ -15,6 +16,7 @@ import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.services.MerchantService;
+import com.example.demo.services.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +33,7 @@ public class MerchantServiceImpl implements MerchantService {
     private final AccountRepository accountRepository;
     private final MerchantRepository merchantRepository;
     private final MerchantCategoryRepository merchantCategoryRepository;
+    private final WalletService walletService;
     private final PasswordEncoder passwordEncoder;
     private final MerchantMapper merchantMapper;
 
@@ -56,7 +59,12 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setCategory(category);
         merchant.setIsActive(true);
 
-        return merchantMapper.toResponse(merchantRepository.save(merchant));
+        MerchantEntity savedMerchant = merchantRepository.save(merchant);
+        
+        // Automatically create wallet for merchant
+        walletService.createWallet(savedMerchant.getId(), OwnerTypeEnum.MERCHANT);
+
+        return merchantMapper.toResponse(savedMerchant);
     }
 
     @Override

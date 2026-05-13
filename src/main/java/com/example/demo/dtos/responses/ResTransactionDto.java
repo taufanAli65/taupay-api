@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,7 +27,7 @@ public class ResTransactionDto {
     private List<ProductItem> products;
 
     @Schema(description = "Total transaction amount", example = "65000")
-    private BigDecimal total;
+    private Long total;
 
     @Data
     @Schema(name = "ResTransactionProductItem", description = "Details of a product in the transaction.")
@@ -45,6 +44,6 @@ public class ResTransactionDto {
         private Integer quantity;
 
         @Schema(description = "Price per unit", example = "25000")
-        private BigDecimal price;
+        private Long price;
     }
-}
+    }

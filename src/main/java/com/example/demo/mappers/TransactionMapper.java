@@ -1,6 +1,5 @@
 package com.example.demo.mappers;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,7 +30,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
             response.setMerchantId(entity.getReceiver().getId().toString());
         }
         response.setCreatedAt(entity.getCreatedAt());
-        response.setTotal(BigDecimal.valueOf(entity.getAmount()));
+        response.setTotal(entity.getAmount());
         return response;
     }
 
@@ -40,7 +39,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
         item.setProductId(product.getId().toString());
         item.setName(product.getName());
         item.setQuantity(quantity);
-        item.setPrice(BigDecimal.valueOf(product.getPrice()));
+        item.setPrice(product.getPrice());
         return item;
     }
 
@@ -49,7 +48,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
             MerchantEntity merchant,
             LocalDateTime createdAt,
             List<ResTransactionDto.ProductItem> products,
-            BigDecimal total
+            Long total
     ) {
         ResTransactionDto response = new ResTransactionDto();
         response.setTrxId(trxId);
@@ -63,7 +62,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
     public AccountTransactionEntity toAccountTransaction(
             MerchantEntity merchant,
             UserEntity payer,
-            long amount,
+            Long amount,
             String category
     ) {
         AccountTransactionEntity accountTransaction = new AccountTransactionEntity();
@@ -78,7 +77,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
     public ProductTransactionEntity toProductTransaction(
             ProductEntity product,
             ResTransactionDto.ProductItem item,
-            long productPrice
+            Long productPrice
     ) {
         ProductTransactionEntity productTransaction = new ProductTransactionEntity();
         productTransaction.setProduct(product);

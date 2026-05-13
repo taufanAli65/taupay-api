@@ -1,6 +1,5 @@
 package com.example.demo.utils;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.example.demo.exceptions.BadRequestException;
@@ -17,17 +16,6 @@ public final class TransactionUtils {
             return UUID.fromString(value);
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException(fieldName + " is invalid");
-        }
-    }
-
-    public static long toLongAmount(BigDecimal value) {
-        if (value == null) {
-            throw new BadRequestException("Amount is required");
-        }
-        try {
-            return value.longValueExact();
-        } catch (ArithmeticException ex) {
-            throw new BadRequestException("Amount must be a whole number");
         }
     }
 }
