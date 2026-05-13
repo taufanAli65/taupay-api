@@ -19,7 +19,6 @@ import com.example.demo.mappers.AccountMapper;
 import com.example.demo.mappers.MerchantMapper;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
-import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.AuthService;
 import com.example.demo.services.MerchantService;

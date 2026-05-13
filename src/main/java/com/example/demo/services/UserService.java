@@ -11,4 +11,5 @@ public interface UserService {
     ResUserDto getUserById(UUID id);
     void updateUserById(ReqUserUpdateDto request, UUID user_id);
     Page<ResUserDto> findAllUsers(int size, int page);
+    void toggleUserStatus(UUID user_id, boolean isActive);
 }

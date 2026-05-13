@@ -1,19 +1,15 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.BaseResponse;
-import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.services.UserService;
 import com.example.demo.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -28,18 +24,6 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
-    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('USER') and @securityUtils.isCurrentProfileId(#id))")
-    @GetMapping("/{id}")
-    @Operation(summary = "Get user by ID", description = "Accessible to super admins or the user who owns the requested profile.")
-    public ResponseEntity<BaseResponse<ResUserDto>> getUserById(
-            @Valid @PathVariable("id") UUID id
-    ) {
-        ResUserDto user = userService.getUserById(id);
-
-        BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user, null);
-        return ResponseEntity.ok(response);
-    }
-
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Returns the authenticated USER profile based on the JWT profile ID.")
@@ -48,20 +32,6 @@ public class UserController {
         ResUserDto user = userService.getUserById(userId);
 
         BaseResponse<ResUserDto> response = BaseResponse.success("Information Retrieved Successfully", user, null);
-        return ResponseEntity.ok(response);
-    }
-
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
-    @GetMapping("/")
-    @Operation(summary = "List users", description = "Returns a paginated list of all user profiles for super admins.")
-    public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
-            @ParameterObject @Valid ReqPaginationDto paginationDto
-    ) {
-        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
-        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
-        Page<ResUserDto> users = userService.findAllUsers(size, page);
-        ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber());
-        BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
         return ResponseEntity.ok(response);
     }
 
