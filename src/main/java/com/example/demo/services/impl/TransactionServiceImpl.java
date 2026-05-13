@@ -84,7 +84,12 @@ public class TransactionServiceImpl implements TransactionService {
 
             productItems.add(transactionMapper.toProductItem(product, item.getQuantity()));
 
-            total += product.getPrice() * item.getQuantity();
+            try {
+                long itemTotal = Math.multiplyExact(product.getPrice(), item.getQuantity());
+                total = Math.addExact(total, itemTotal);
+            } catch (ArithmeticException ex) {
+                throw new BadRequestException("Transaction total is too large");
+            }
         }
 
         String trxId = generateTransactionId();
