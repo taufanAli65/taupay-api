@@ -14,10 +14,10 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AccountProductTransactionEntity extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_transaction_history_id", referencedColumnName = "id")
+    @JoinColumn(name = "account_transaction_history_id", referencedColumnName = "id", nullable = false)
     private AccountTransactionEntity accountTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_transaction_history_id", referencedColumnName = "id")
+    @JoinColumn(name = "product_transaction_history_id", referencedColumnName = "id", nullable = false)
     private ProductTransactionEntity productTransaction;
 }
