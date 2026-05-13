@@ -199,6 +199,10 @@ public class TransactionServiceImpl implements TransactionService {
         
         LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.now().minusDays(30);
         LocalDateTime end = (endDate != null) ? endDate.atTime(23, 59, 59) : LocalDateTime.now();
+
+        if (start.isAfter(end)) {
+            throw new BadRequestException("startDate must be before or equal to endDate");
+        }
         
         Pageable pageable = PageRequest.of(page, size);
         Page<AccountTransactionEntity> transactionPage;
