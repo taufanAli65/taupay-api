@@ -9,6 +9,7 @@ import com.example.demo.dtos.responses.ResRegisterDto;
 import com.example.demo.dtos.responses.ResRegisterMerchantDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.MerchantEntity;
+import com.example.demo.entities.OwnerTypeEnum;
 import com.example.demo.entities.RoleEnum;
 import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.BadRequestException;
@@ -22,11 +23,14 @@ import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.AuthService;
 import com.example.demo.services.MerchantService;
+import com.example.demo.services.WalletService;
 import com.example.demo.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 
 @Service
@@ -35,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
     private final MerchantService merchantService;
+    private final WalletService walletService;
     private final UserMapper userMapper;
     private final AccountMapper accountMapper;
     private final MerchantMapper merchantMapper;
@@ -93,7 +98,11 @@ public class AuthServiceImpl implements AuthService {
 
         AccountEntity savedAccount = accountRepository.save(newAccount);
         newUser.setAccount(savedAccount);
-        return userMapper.toRegisterResponse(userRepository.save(newUser));
+        UserEntity savedUser = userRepository.save(newUser);
+        
+        walletService.createWallet(savedUser.getId(), OwnerTypeEnum.USER);
+        
+        return userMapper.toRegisterResponse(savedUser);
     }
 
     @Override

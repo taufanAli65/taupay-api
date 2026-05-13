@@ -13,11 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountProductTransactionEntity extends BaseEntity {
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_transaction_history_id", referencedColumnName = "id")
     private AccountTransactionEntity accountTransaction;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_transaction_history_id", referencedColumnName = "id")
     private ProductTransactionEntity productTransaction;
 }

@@ -22,6 +22,7 @@ public class ProductEntity extends BaseEntity {
 
     private String description;
 
+
     @Column(nullable = false, name = "is_active")
     private Boolean isActive;
 
