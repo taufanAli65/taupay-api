@@ -13,11 +13,11 @@ import java.util.UUID;
 @Repository
 public interface AccountTransactionRepository extends JpaRepository<AccountTransactionEntity, UUID> {
     
-    @EntityGraph(attributePaths = {"receiver", "items.productTransaction"})
+    @EntityGraph(attributePaths = {"receiver"})
     Page<AccountTransactionEntity> findAllByRequesterIdAndCreatedAtBetween(
             UUID requesterId, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"requester", "items.productTransaction"})
+    @EntityGraph(attributePaths = {"requester"})
     Page<AccountTransactionEntity> findAllByReceiverIdAndCreatedAtBetween(
             UUID receiverId, LocalDateTime start, LocalDateTime end, Pageable pageable);
 }

@@ -119,6 +119,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
         // Map product details
         if (entity.getItems() != null) {
             List<ResTransactionHistoryDto.ProductDetail> productDetails = entity.getItems().stream()
+                .filter(item -> item.getProductTransaction() != null)
                 .map(item -> {
                     ProductTransactionEntity pt = item.getProductTransaction();
                     return new ResTransactionHistoryDto.ProductDetail(

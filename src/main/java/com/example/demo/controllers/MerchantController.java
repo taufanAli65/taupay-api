@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqMerchantDto;
+import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
@@ -13,6 +14,7 @@ import com.example.demo.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -77,10 +79,12 @@ public class MerchantController {
     public ResponseEntity<BaseResponse<List<ResTransactionHistoryDto>>> getTransactionHistory(
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @ParameterObject @Valid ReqPaginationDto paginationDto
     ) {
         UUID merchantId = SecurityUtils.getCurrentProfileId();
+        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
+        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
+
         Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(merchantId, startDate, endDate, page, size, true);
         ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));

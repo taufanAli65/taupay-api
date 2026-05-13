@@ -87,10 +87,12 @@ public class UserController {
     public ResponseEntity<BaseResponse<java.util.List<ResTransactionHistoryDto>>> getTransactionHistory(
             @RequestParam(required = false) LocalDate startDate,
             @RequestParam(required = false) LocalDate endDate,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @ParameterObject @Valid ReqPaginationDto paginationDto
     ) {
         UUID userId = SecurityUtils.getCurrentProfileId();
+        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
+        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
+        
         Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(userId, startDate, endDate, page, size, false);
         ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
