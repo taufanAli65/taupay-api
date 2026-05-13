@@ -3,6 +3,7 @@ package com.example.demo.mappers;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.demo.dtos.responses.ResTransactionHistoryDto;
 import org.springframework.stereotype.Component;
 
 import com.example.demo.dtos.responses.ResTransactionDto;
@@ -95,5 +96,41 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
         link.setAccountTransaction(accountTransaction);
         link.setProductTransaction(productTransaction);
         return link;
+    }
+
+    public ResTransactionHistoryDto toHistoryResponse(AccountTransactionEntity entity, boolean isMerchantPerspective) {
+        if (entity == null) return null;
+
+        ResTransactionHistoryDto dto = new ResTransactionHistoryDto();
+        dto.setHistoryId(entity.getId());
+        dto.setAmount(entity.getAmount());
+        dto.setCategory(entity.getCategory());
+        dto.setCreatedAt(entity.getCreatedAt());
+
+        // Determine counterparty name
+        if (isMerchantPerspective) {
+            dto.setCounterpartyName(entity.getRequester() != null ? 
+                entity.getRequester().getFirstName() + " " + entity.getRequester().getLastName() : "Unknown User");
+        } else {
+            dto.setCounterpartyName(entity.getReceiver() != null ? 
+                entity.getReceiver().getName() : "Unknown Merchant");
+        }
+
+        // Map product details
+        if (entity.getItems() != null) {
+            List<ResTransactionHistoryDto.ProductDetail> productDetails = entity.getItems().stream()
+                .filter(item -> item.getProductTransaction() != null)
+                .map(item -> {
+                    ProductTransactionEntity pt = item.getProductTransaction();
+                    return new ResTransactionHistoryDto.ProductDetail(
+                        pt.getProductName(),
+                        pt.getQuantity(),
+                        pt.getProductPrice()
+                    );
+                }).toList();
+            dto.setProducts(productDetails);
+        }
+
+        return dto;
     }
 }

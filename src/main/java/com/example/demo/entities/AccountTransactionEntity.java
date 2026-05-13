@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Table(name = "mst_account_transaction_histories")
 @Setter
@@ -29,4 +31,7 @@ public class AccountTransactionEntity extends BaseEntity {
 
     @Column(nullable = false)
     private String category;
+
+    @OneToMany(mappedBy = "accountTransaction", fetch = FetchType.LAZY)
+    private List<AccountProductTransactionEntity> items;
 }
