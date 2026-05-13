@@ -10,4 +10,6 @@ import com.example.demo.entities.WalletEntity;
 
 public interface WalletRepository extends JpaRepository<WalletEntity, UUID> {
     Optional<WalletEntity> findByOwnerIdAndOwnerType(UUID ownerId, OwnerTypeEnum ownerType);
+
+    boolean existsByNoWallet(String noWallet);
 }

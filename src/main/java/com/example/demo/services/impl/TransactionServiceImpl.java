@@ -1,6 +1,5 @@
 package com.example.demo.services.impl;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +72,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
 
         List<ResTransactionDto.ProductItem> productItems = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
+        Long total = 0L;
         for (ReqTransactionDto.ProductItem item : request.getProducts()) {
             UUID productId = TransactionUtils.parseUuid(item.getProductId(), "product_id");
             if (item.getQuantity() == null || item.getQuantity() <= 0) {
@@ -85,8 +84,8 @@ public class TransactionServiceImpl implements TransactionService {
 
             productItems.add(transactionMapper.toProductItem(product, item.getQuantity()));
 
-            total = total.add(BigDecimal.valueOf(product.getPrice()).multiply(BigDecimal.valueOf(item.getQuantity())));
-        } // TODO: IMPROVE - optimize product fetching with a single query for all product IDs
+            total += product.getPrice() * item.getQuantity();
+        }
 
         String trxId = generateTransactionId();
         LocalDateTime createdAt = LocalDateTime.now();
@@ -130,7 +129,7 @@ public class TransactionServiceImpl implements TransactionService {
         UserEntity payer = userRepository.findById(payerUserId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
 
-        long amount = TransactionUtils.toLongAmount(payload.getTotal());
+        Long amount = payload.getTotal();
 
         WalletEntity payerWallet = walletRepository.findByOwnerIdAndOwnerType(payerUserId, OwnerTypeEnum.USER)
             .orElseThrow(() -> new DataNotFoundException("User wallet not found"));
@@ -163,7 +162,7 @@ public class TransactionServiceImpl implements TransactionService {
             ProductEntity product = productRepository.findById(productId)
                     .orElseThrow(() -> new DataNotFoundException("Product not found"));
 
-                long productPrice = TransactionUtils.toLongAmount(item.getPrice());
+                Long productPrice = item.getPrice();
                 ProductTransactionEntity productTransaction = transactionMapper.toProductTransaction(
                     product,
                     item,
@@ -183,7 +182,7 @@ public class TransactionServiceImpl implements TransactionService {
         transactionCacheService.evict(request.getTrxId());
     }
 
-    private void notifySse(String trxId, String status, BigDecimal total) {
+    private void notifySse(String trxId, String status, Long total) {
         Map<String, Object> payload = Map.of(
                 "trx_id", trxId,
                 "status", status,
