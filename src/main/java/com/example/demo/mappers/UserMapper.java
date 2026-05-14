@@ -2,6 +2,7 @@ package com.example.demo.mappers;
 
 import com.example.demo.dtos.requests.ReqRegisterDto;
 import com.example.demo.dtos.responses.ResRegisterDto;
+import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.UserEntity;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,18 @@ public class UserMapper extends BaseMapper<UserEntity, ReqRegisterDto, ResRegist
         ResRegisterDto response = new ResRegisterDto();
         map(user, response);
         response.setBirthDate(String.valueOf(user.getBirthDate()));
+        return response;
+    }
+
+    public ResUserDto toUserResponse(UserEntity user) {
+        if (user == null) {
+            return null;
+        }
+        ResUserDto response = new ResUserDto();
+        map(user, response);
+        if (user.getAccount() != null) {
+            response.setEmail(user.getAccount().getEmail());
+        }
         return response;
     }
 
