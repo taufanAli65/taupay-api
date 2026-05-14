@@ -50,7 +50,7 @@ public class AdminMerchantController {
         int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
         int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
         Page<ResMerchantDto> merchants = merchantService.findAllMerchants(size, page);
-        ResPaginationDto pagination = new ResPaginationDto(merchants.getSize(), merchants.getNumber());
+        ResPaginationDto pagination = new ResPaginationDto(merchants.getSize(), merchants.getNumber(), merchants.getTotalElements(), merchants.getTotalPages());
         BaseResponse<Iterable<ResMerchantDto>> response = BaseResponse.success("Merchants Retrieved Successfully", merchants.getContent(), pagination);
         return ResponseEntity.ok(response);
     }

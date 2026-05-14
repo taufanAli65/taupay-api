@@ -29,7 +29,7 @@ public class AdminProductController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<ResProductDto> productPage = productService.getAllProduct(page, size);
-        ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber());
+        ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
 
         return ResponseEntity.ok(BaseResponse.success("Products Retrieved Successfully", productPage.getContent(), pagination));
     }

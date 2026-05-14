@@ -1,6 +1,7 @@
 package com.example.demo.exceptions;
 
 import com.example.demo.dtos.responses.BaseResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalAdviceException {
@@ -30,6 +33,31 @@ public class GlobalAdviceException {
                 .getFieldErrors()
                 .forEach(err ->
                         errorMessages.add(err.getDefaultMessage()));
+        BaseResponse<Object> response = BaseResponse.error("Validation Error", errorMessages);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<BaseResponse<Object>> handleConstraintViolation(ConstraintViolationException exception) {
+        List<String> errorMessages = exception.getConstraintViolations()
+                .stream()
+                .map(violation -> {
+                    String propertyPath = violation.getPropertyPath().toString();
+                    String indexPart = propertyPath.contains("[") && propertyPath.contains("]") 
+                        ? propertyPath.substring(propertyPath.indexOf("[") + 1, propertyPath.indexOf("]"))
+                        : null;
+                    
+                    if (indexPart != null) {
+                        try {
+                            int index = Integer.parseInt(indexPart) + 1;
+                            return "Data-" + index + ": " + violation.getMessage();
+                        } catch (NumberFormatException e) {
+                            return violation.getMessage();
+                        }
+                    }
+                    return violation.getMessage();
+                })
+                .collect(Collectors.toList());
         BaseResponse<Object> response = BaseResponse.error("Validation Error", errorMessages);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }

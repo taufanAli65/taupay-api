@@ -15,4 +15,10 @@ public class ResPaginationDto {
 
     @Schema(description = "Zero-based page index returned by the API.", example = "0")
     private int page;
+
+    @Schema(description = "Total number of elements across all pages.", example = "100")
+    private long totalElements;
+
+    @Schema(description = "Total number of pages available.", example = "10")
+    private int totalPages;
 }
