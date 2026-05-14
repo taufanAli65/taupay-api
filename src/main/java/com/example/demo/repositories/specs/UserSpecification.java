@@ -23,7 +23,7 @@ public class UserSpecification {
                 Predicate firstNameLike = cb.like(cb.lower(root.get("firstName")), pattern);
                 Predicate lastNameLike = cb.like(cb.lower(root.get("lastName")), pattern);
                 Predicate addressLike = cb.like(cb.lower(root.get("address")), pattern);
-                Predicate emailLike = cb.like(cb.lower(root.join("account").get("email")), pattern);
+                Predicate emailLike = cb.like(cb.lower(root.get("account").get("email")), pattern);
 
                 predicates.add(cb.or(firstNameLike, lastNameLike, addressLike, emailLike));
             }
