@@ -22,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Tag(name = "Products", description = "Endpoints for product management and lookups.")
 @SecurityRequirement(name = "bearerAuth")
+@org.springframework.validation.annotation.Validated
 public class ProductController {
     private final ProductService productService;
 
@@ -31,7 +32,7 @@ public class ProductController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<ResProductDto> productPage = productService.getAllProduct(page, size);
-        ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber());
+        ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
 
         return ResponseEntity.ok(BaseResponse.success("Products Retrieved Successfully", productPage.getContent(), pagination));
     }
@@ -56,7 +57,7 @@ public class ProductController {
 
     @PostMapping("/bulk")
     public ResponseEntity<BaseResponse<List<ResCreateProductDto>>> createBulk(
-            @RequestBody @Valid List<ReqCreateProductDto> requests
+            @RequestBody List<@Valid ReqCreateProductDto> requests
     ) {
         List<ResCreateProductDto> products = productService.createBulkProducts(requests);
         return ResponseEntity.ok(BaseResponse.success("Bulk Products Created Successfully", products));

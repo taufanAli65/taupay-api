@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqPaginationDto;
+import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
@@ -43,6 +44,18 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @GetMapping
+    @Operation(summary = "List users", description = "Returns a paginated list of all user profiles for super admins.")
+    public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
+            @ParameterObject @Valid ReqUserFilterDto filterDto
+    ) {
+        Page<ResUserDto> users = userService.findAllUsers(filterDto);
+        ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber(), users.getTotalElements(), users.getTotalPages());
+        BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
+        return ResponseEntity.ok(response);
+    }
+
     @PreAuthorize("hasRole('USER')")
     @PatchMapping("/me")
     @Operation(summary = "Update current user", description = "Partially updates the authenticated USER profile.")
@@ -68,7 +81,7 @@ public class UserController {
         int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
         
         Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(userId, startDate, endDate, page, size, false);
-        ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber());
+        ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber(), history.getTotalElements(), history.getTotalPages());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
     }
 }

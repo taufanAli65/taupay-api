@@ -119,7 +119,7 @@ public class ProductServiceImpl implements ProductService {
 
             ProductQuantityEntity quantity = new ProductQuantityEntity();
             quantity.setProduct(product);
-            quantity.setStock(request.getStock() != null ? request.getStock() : 0);
+            quantity.setStock(request.getStock());
             product.setQuantityEntity(quantity);
 
             return product;

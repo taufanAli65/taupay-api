@@ -86,7 +86,7 @@ public class MerchantController {
         int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
 
         Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(merchantId, startDate, endDate, page, size, true);
-        ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber());
+        ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber(), history.getTotalElements(), history.getTotalPages());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
     }
 }
