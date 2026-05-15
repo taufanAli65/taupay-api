@@ -42,7 +42,7 @@ public class AdminMerchantController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
+    @GetMapping({"", "/"})
     @Operation(summary = "List merchants", description = "Returns a paginated list of all merchant profiles for super admins.")
     public ResponseEntity<BaseResponse<Iterable<ResMerchantDto>>> listMerchants(
             @ParameterObject @Valid ReqMerchantFilterDto filterDto
