@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResUserDto;
+import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.services.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,12 +33,10 @@ public class AdminUserController {
     @GetMapping("/")
     @Operation(summary = "List users", description = "Returns a paginated list of all user profiles for super admins.")
     public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
-            @ParameterObject @Valid ReqPaginationDto paginationDto
+            @ParameterObject @Valid ReqUserFilterDto filterDto
     ) {
-        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
-        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
-        Page<ResUserDto> users = userService.findAllUsers(size, page);
-        ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber());
+        Page<ResUserDto> users = userService.findAllUsers(filterDto);
+        ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber(), users.getTotalElements(), users.getTotalPages());
         BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
         return ResponseEntity.ok(response);
     }
