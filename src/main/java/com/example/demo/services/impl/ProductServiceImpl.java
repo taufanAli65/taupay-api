@@ -58,6 +58,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Page<ResProductDto> getProductsByMerchantId(UUID merchantId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ProductEntity> products = productRepository.findAllByMerchantId(merchantId, pageable);
+        return products.map(productMapper::toResponse);
+    }
+
+    @Override
     public ResProductDto getProductById(UUID id) {
         ProductEntity product;
 

@@ -1,5 +1,6 @@
 package com.example.demo.dtos.responses;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.UUID;
@@ -13,6 +14,9 @@ public class ResProductDto {
     private Boolean isActive;
     private String imageUrl;
     private Integer stock;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private ResMerchantDto merchant;
+
     private ResProductCategoryDto category;
 }

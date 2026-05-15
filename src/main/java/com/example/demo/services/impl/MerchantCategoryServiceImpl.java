@@ -80,10 +80,15 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
     }
 
     @Override
-    @Cacheable(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, key = "'all'")
-    public List<ResMerchantCategoryDto> getAllMerchantCategories() {
-        return merchantCategoryRepository.findAll()
-                .stream()
+    public List<ResMerchantCategoryDto> getAllMerchantCategories(String search) {
+        List<MerchantCategoryEntity> categories;
+        if (search != null && !search.isBlank()) {
+            categories = merchantCategoryRepository.findByNameContainingIgnoreCaseOrderByNameAsc(search);
+        } else {
+            categories = merchantCategoryRepository.findAllByOrderByNameAsc();
+        }
+
+        return categories.stream()
                 .map(merchantCategoryMapper::toResponse)
                 .collect(Collectors.toList());
     }

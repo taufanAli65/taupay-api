@@ -58,8 +58,10 @@ public class MerchantController {
     // Merchant Category Start Here
     @GetMapping("/category")
     @Operation(summary = "List merchant categories", description = "Returns all available merchant categories.")
-    public ResponseEntity<BaseResponse<List<ResMerchantCategoryDto>>> getAllMerchantCategories() {
-        List<ResMerchantCategoryDto> merchantCategories = merchantCategoryService.getAllMerchantCategories();
+    public ResponseEntity<BaseResponse<List<ResMerchantCategoryDto>>> getAllMerchantCategories(
+            @RequestParam(required = false) String search
+    ) {
+        List<ResMerchantCategoryDto> merchantCategories = merchantCategoryService.getAllMerchantCategories(search);
         BaseResponse<List<ResMerchantCategoryDto>> response = BaseResponse.success("Merchant Categories Retrieved Successfully", merchantCategories);
         return ResponseEntity.ok(response);
     }

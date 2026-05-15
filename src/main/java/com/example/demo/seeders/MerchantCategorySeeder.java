@@ -53,7 +53,7 @@ public class MerchantCategorySeeder implements ApplicationRunner {
                 merchantCategoryRepository.save(category);
             }
 
-            merchantCategoryService.getAllMerchantCategories();
+            merchantCategoryService.getAllMerchantCategories(null);
             log.info("Merchant categories seeded successfully. Total: {}", categories.length);
         } else {
             log.info("Merchant categories already exist. Skipping seed.");
