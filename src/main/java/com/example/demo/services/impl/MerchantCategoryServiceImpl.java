@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -88,6 +89,6 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
         return merchantCategoryRepository.findAll()
                 .stream()
                 .map(merchantCategoryMapper::toResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

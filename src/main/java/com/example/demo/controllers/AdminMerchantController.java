@@ -2,8 +2,8 @@ package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqMerchantCategoryDto;
 import com.example.demo.dtos.requests.ReqMerchantDto;
+import com.example.demo.dtos.requests.ReqMerchantFilterDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
-import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResMerchantCategoryDto;
@@ -42,14 +42,12 @@ public class AdminMerchantController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping({"", "/"})
-    @Operation(summary = "List merchants", description = "Returns a paginated list of merchants.")
+    @GetMapping
+    @Operation(summary = "List merchants", description = "Returns a paginated list of all merchant profiles for super admins.")
     public ResponseEntity<BaseResponse<Iterable<ResMerchantDto>>> listMerchants(
-            @ParameterObject @Valid ReqPaginationDto paginationDto
+            @ParameterObject @Valid ReqMerchantFilterDto filterDto
     ) {
-        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
-        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
-        Page<ResMerchantDto> merchants = merchantService.findAllMerchants(size, page);
+        Page<ResMerchantDto> merchants = merchantService.findAllMerchants(filterDto);
         ResPaginationDto pagination = new ResPaginationDto(merchants.getSize(), merchants.getNumber(), merchants.getTotalElements(), merchants.getTotalPages());
         BaseResponse<Iterable<ResMerchantDto>> response = BaseResponse.success("Merchants Retrieved Successfully", merchants.getContent(), pagination);
         return ResponseEntity.ok(response);
