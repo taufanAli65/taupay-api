@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminUserController {
     private final UserService userService;
 
-    @GetMapping("/")
+    @GetMapping
     @Operation(summary = "List users", description = "Returns a paginated list of all user profiles for super admins.")
     public ResponseEntity<BaseResponse<Iterable<ResUserDto>>> listUsers(
             @ParameterObject @Valid ReqUserFilterDto filterDto
