@@ -3,6 +3,7 @@ package com.example.demo.services.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.example.demo.dtos.requests.ReqTransactionCallbackDto;
 import com.example.demo.dtos.requests.ReqTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionHistoryDto;
@@ -26,13 +26,13 @@ import com.example.demo.entities.OwnerTypeEnum;
 import com.example.demo.entities.ProductEntity;
 import com.example.demo.entities.ProductTransactionEntity;
 import com.example.demo.entities.UserEntity;
-import com.example.demo.entities.WalletEntity;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.TransactionMapper;
 import com.example.demo.repositories.AccountProductTransactionRepository;
 import com.example.demo.repositories.AccountTransactionRepository;
 import com.example.demo.repositories.MerchantRepository;
+import com.example.demo.repositories.ProductQuantityRepository;
 import com.example.demo.repositories.ProductRepository;
 import com.example.demo.repositories.ProductTransactionHistoryRepository;
 import com.example.demo.repositories.UserRepository;
@@ -59,6 +59,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionMapper transactionMapper;
     private final TransactionCacheService transactionCacheService;
     private final EventStreamService eventStreamService;
+    private final ProductQuantityRepository productQuantityRepository;
 
     @Value("${app.transaction.ttl:5m}")
     private java.time.Duration transactionTtl;
@@ -116,46 +117,62 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public void handlePaymentCallback(ReqTransactionCallbackDto request) {
-        if (request == null || request.getTrxId() == null || request.getTrxId().isBlank()) {
+    public void handlePaymentCallback(String trxId, UUID userId) {
+        if (userId == null) {
+            throw new BadRequestException("User ID is required");
+        }
+
+        if (trxId == null || trxId.isBlank()) {
             throw new BadRequestException("trx_id is required");
         }
 
-        String status = request.getStatus() != null ? request.getStatus().trim().toUpperCase() : "";
-        ResTransactionDto payload = transactionCacheService.get(request.getTrxId());
-
-        if (!"PAID".equals(status)) {
-            log.info("Transaction {} completed with status {}", request.getTrxId(), status);
-            notifySse(request.getTrxId(), status, payload.getTotal());
-            transactionCacheService.evict(request.getTrxId());
-            return;
-        }
+        ResTransactionDto payload = transactionCacheService.get(trxId);
 
         UUID merchantId = TransactionUtils.parseUuid(payload.getMerchantId(), "merchant_id");
-        UUID payerUserId = TransactionUtils.parseUuid(request.getPayerUserId(), "payer_user_id");
 
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
-        UserEntity payer = userRepository.findById(payerUserId)
+        UserEntity payer = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
 
         Long amount = payload.getTotal();
 
-        WalletEntity payerWallet = walletRepository.findByOwnerIdAndOwnerType(payerUserId, OwnerTypeEnum.USER)
-            .orElseThrow(() -> new DataNotFoundException("User wallet not found"));
-        WalletEntity merchantWallet = walletRepository.findByOwnerIdAndOwnerType(merchantId, OwnerTypeEnum.MERCHANT)
-            .orElseThrow(() -> new DataNotFoundException("Merchant wallet not found"));
-
-        long payerBalance = payerWallet.getAmount() != null ? payerWallet.getAmount() : 0L;
-        if (payerBalance < amount) {
+        int payerWalletUpdated = walletRepository.decrementAmountIfEnough(userId, OwnerTypeEnum.USER, amount);
+        if (payerWalletUpdated == 0) {
+            if (!walletRepository.existsByOwnerIdAndOwnerType(userId, OwnerTypeEnum.USER)) {
+                throw new DataNotFoundException("User wallet not found");
+            }
             throw new BadRequestException("Insufficient wallet balance");
         }
-        long merchantBalance = merchantWallet.getAmount() != null ? merchantWallet.getAmount() : 0L;
 
-        payerWallet.setAmount(payerBalance - amount);
-        merchantWallet.setAmount(merchantBalance + amount);
-        walletRepository.save(payerWallet);
-        walletRepository.save(merchantWallet);
+        int merchantWalletUpdated = walletRepository.incrementAmount(merchantId, OwnerTypeEnum.MERCHANT, amount);
+        if (merchantWalletUpdated == 0) {
+            throw new DataNotFoundException("Merchant wallet not found");
+        }
+
+        Map<UUID, Integer> requestedQuantitiesByProductId = new LinkedHashMap<>();
+        for (ResTransactionDto.ProductItem item : payload.getProducts()) {
+            UUID productId = TransactionUtils.parseUuid(item.getProductId(), "product_id");
+            requestedQuantitiesByProductId.merge(productId, item.getQuantity(), Integer::sum);
+        }
+
+        for (Map.Entry<UUID, Integer> entry : requestedQuantitiesByProductId.entrySet()) {
+            int stockUpdated = productQuantityRepository.decrementStockIfEnough(entry.getKey(), entry.getValue());
+            if (stockUpdated == 0) {
+                if (!productQuantityRepository.existsByProductId(entry.getKey())) {
+                    throw new DataNotFoundException("Product quantity not found");
+                }
+                throw new BadRequestException("Insufficient product stock");
+            }
+        }
+
+        Map<UUID, ProductEntity> productsById = new java.util.HashMap<>();
+        for (ProductEntity product : productRepository.findAllById(requestedQuantitiesByProductId.keySet())) {
+            productsById.put(product.getId(), product);
+        }
+        if (productsById.size() != requestedQuantitiesByProductId.size()) {
+            throw new DataNotFoundException("Product not found");
+        }
 
         String merchantCategory = merchant.getCategory() != null ? merchant.getCategory().getName() : "UNSPECIFIED";
         AccountTransactionEntity accountTransaction = transactionMapper.toAccountTransaction(
@@ -169,8 +186,7 @@ public class TransactionServiceImpl implements TransactionService {
         List<ProductTransactionEntity> productTransactions = new ArrayList<>();
         for (ResTransactionDto.ProductItem item : payload.getProducts()) {
             UUID productId = TransactionUtils.parseUuid(item.getProductId(), "product_id");
-            ProductEntity product = productRepository.findById(productId)
-                    .orElseThrow(() -> new DataNotFoundException("Product not found"));
+            ProductEntity product = productsById.get(productId);
 
                 Long productPrice = item.getPrice();
                 ProductTransactionEntity productTransaction = transactionMapper.toProductTransaction(
@@ -188,8 +204,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
         accountProductTransactionRepository.saveAll(links);
 
-        notifySse(request.getTrxId(), "PAID", payload.getTotal());
-        transactionCacheService.evict(request.getTrxId());
+        notifySse(trxId, "PAID", payload.getTotal());
+        transactionCacheService.evict(trxId);
     }
 
     @Override

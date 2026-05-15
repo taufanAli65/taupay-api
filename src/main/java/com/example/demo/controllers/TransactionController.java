@@ -3,12 +3,16 @@ package com.example.demo.controllers;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.http.MediaType;
 
-import com.example.demo.dtos.requests.ReqTransactionCallbackDto;
 import com.example.demo.dtos.requests.ReqTransactionDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResTransactionDto;
@@ -28,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class TransactionController {
     private final TransactionService transactionService;
 
+    @PreAuthorize("hasRole('MERCHANT')")
     @PostMapping
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Create transaction", description = "Creates a transaction request for a merchant.")
@@ -40,13 +45,24 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/callback")
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/{trxId}/callback")
     @Operation(summary = "Payment callback", description = "Receives payment gateway callback for a transaction.")
     public ResponseEntity<BaseResponse<Void>> paymentCallback(
-            @Valid @RequestBody ReqTransactionCallbackDto request
+            @PathVariable String trxId
     ) {
-        transactionService.handlePaymentCallback(request);
+        UUID userId = SecurityUtils.getCurrentProfileId();
+        System.out.println("Payment callback received for trxId: " + trxId + ", userId: " + userId);
+        transactionService.handlePaymentCallback(trxId, userId);
         BaseResponse<Void> response = BaseResponse.success("Payment Callback Processed", null);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/{trxId}/status", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "Subscribe to transaction events", description = "Opens an SSE channel for transaction payment events.")
+    public SseEmitter streamTransactionEvents(
+            @PathVariable("trxId") String trxId
+    ) {
+        return transactionService.subscribeToTransactionEvents(trxId);
     }
 }

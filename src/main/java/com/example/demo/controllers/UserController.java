@@ -33,6 +33,7 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
     private final TransactionService transactionService;
+    
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Returns the authenticated USER profile based on the JWT profile ID.")

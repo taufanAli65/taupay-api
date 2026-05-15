@@ -14,9 +14,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TransactionCacheServiceImpl implements TransactionCacheService {
     private static final String TRX_KEY_PREFIX = "trx:";
 
@@ -42,6 +44,7 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
         String cacheKey = buildCacheKey(trxId);
         String json = stringRedisTemplate.opsForValue().get(cacheKey);
         if (json == null || json.isBlank()) {
+            log.warn("Transaction cache miss: trxId={}, cacheKey={}", trxId, cacheKey);
             throw new DataNotFoundException("Transaction not found or expired");
         }
         try {
@@ -53,10 +56,19 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
 
     @Override
     public void evict(String trxId) {
-        stringRedisTemplate.delete(buildCacheKey(trxId));
+        String cacheKey = buildCacheKey(trxId);
+        stringRedisTemplate.delete(cacheKey);
+        log.info("Evicted transaction cache: trxId={}, cacheKey={}", trxId, cacheKey);
     }
 
     private String buildCacheKey(String trxId) {
-        return TRX_KEY_PREFIX + trxId;
+        return TRX_KEY_PREFIX + normalizeTrxId(trxId);
+    }
+
+    private String normalizeTrxId(String trxId) {
+        if (trxId == null) {
+            return null;
+        }
+        return trxId.trim();
     }
 }
