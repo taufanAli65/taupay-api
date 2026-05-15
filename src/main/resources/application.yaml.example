@@ -27,6 +27,11 @@ spring:
 app:
   cache:
     merchant-category-ttl: 1h
+  rate-limit:
+    enabled: true
+    api-prefix: /api/v1
+    capacity: 15
+    window: 1m
 
 jwt:
   secret: your_secret_key
