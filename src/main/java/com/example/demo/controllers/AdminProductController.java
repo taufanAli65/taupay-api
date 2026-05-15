@@ -1,17 +1,21 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.services.ProductService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,11 +28,11 @@ public class AdminProductController {
     private final ProductService productService;
 
     @GetMapping
+    @Operation(summary = "List all products", description = "Returns a paginated list of all products with optional search and status filter for super admins.")
     public ResponseEntity<BaseResponse<List<ResProductDto>>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @ParameterObject @Valid ReqProductFilterDto filterDto
     ) {
-        Page<ResProductDto> productPage = productService.getAllProduct(page, size);
+        Page<ResProductDto> productPage = productService.findAllProducts(filterDto);
         ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
 
         return ResponseEntity.ok(BaseResponse.success("Products Retrieved Successfully", productPage.getContent(), pagination));

@@ -1,6 +1,6 @@
 package com.example.demo.services;
-
 import com.example.demo.dtos.requests.ReqCreateProductDto;
+import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import org.springframework.data.domain.Page;
@@ -11,6 +11,8 @@ import java.util.UUID;
 
 public interface ProductService {
     Page<ResProductDto> getAllProduct(int page, int size);
+
+    Page<ResProductDto> findAllProducts(ReqProductFilterDto filterDto);
 
     Page<ResProductDto> getProductsByMerchantId(UUID merchantId, int page, int size);
 

@@ -1,6 +1,7 @@
 package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
+import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.entities.MerchantEntity;
@@ -14,6 +15,7 @@ import com.example.demo.mappers.ProductMapper;
 import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.repositories.ProductCategoryRepository;
 import com.example.demo.repositories.ProductRepository;
+import com.example.demo.repositories.specs.ProductSpecification;
 import com.example.demo.services.FileService;
 import com.example.demo.services.ProductService;
 import com.example.demo.utils.PartialUpdateUtils;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,6 +58,16 @@ public class ProductServiceImpl implements ProductService {
         }
         
         return products.map(product -> productMapper.toProductResponse(product, product.getMerchant()));
+    }
+
+    @Override
+    public Page<ResProductDto> findAllProducts(ReqProductFilterDto filterDto) {
+        int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
+        int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto);
+        return productRepository.findAll(spec, pageRequest).map(product -> productMapper.toProductResponse(product, product.getMerchant()));
     }
 
     @Override
