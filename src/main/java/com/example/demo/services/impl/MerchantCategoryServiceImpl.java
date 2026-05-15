@@ -8,6 +8,9 @@ import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.MerchantCategoryMapper;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.services.MerchantCategoryService;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,18 +22,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MerchantCategoryServiceImpl implements MerchantCategoryService {
     private final MerchantCategoryRepository merchantCategoryRepository;
     private final MerchantCategoryMapper merchantCategoryMapper;
-
-    public MerchantCategoryServiceImpl(
-            MerchantCategoryRepository merchantCategoryRepository,
-            MerchantCategoryMapper merchantCategoryMapper
-    ) {
-        this.merchantCategoryRepository = merchantCategoryRepository;
-        this.merchantCategoryMapper = merchantCategoryMapper;
-    }
 
     @Override
     @Transactional

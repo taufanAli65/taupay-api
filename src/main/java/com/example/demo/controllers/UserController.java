@@ -13,9 +13,10 @@ import com.example.demo.utils.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,19 +33,6 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
     private final TransactionService transactionService;
-
-    @PreAuthorize("hasRole('SUPER_ADMIN') or (hasRole('USER') and @securityUtils.isCurrentProfileId(#id))")
-    @GetMapping("/{id}")
-    @Operation(summary = "Get user by ID", description = "Accessible to super admins or the user who owns the requested profile.")
-    public ResponseEntity<BaseResponse<ResUserDto>> getUserById(
-            @Valid @PathVariable("id") UUID id
-    ) {
-        ResUserDto user = userService.getUserById(id);
-
-        BaseResponse<ResUserDto> response = BaseResponse.success("User Data Retrieved Successfully", user, null);
-        return ResponseEntity.ok(response);
-    }
-
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     @Operation(summary = "Get current user", description = "Returns the authenticated USER profile based on the JWT profile ID.")

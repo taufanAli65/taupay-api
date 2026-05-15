@@ -3,7 +3,6 @@ package com.example.demo.mappers;
 import com.example.demo.dtos.requests.ReqRegisterDto;
 import com.example.demo.dtos.responses.ResRegisterDto;
 import com.example.demo.dtos.responses.ResUserDto;
-import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.UserEntity;
 import org.springframework.stereotype.Component;
 

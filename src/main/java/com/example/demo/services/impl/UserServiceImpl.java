@@ -18,6 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.example.demo.utils.PartialUpdateUtils;
+import com.example.demo.utils.SecurityUtils;
+import com.example.demo.exceptions.UnauthorizedException;
 
 import java.util.UUID;
 
@@ -53,5 +55,18 @@ public class UserServiceImpl implements UserService {
         Specification<UserEntity> spec = UserSpecification.filterBy(filterDto);
 
         return userRepository.findAll(spec, pageRequest).map(userMapper::toUserResponse);
+    }
+
+    @Override
+    public void toggleUserStatus(UUID user_id, boolean isActive) {
+        if (SecurityUtils.hasRole("SUPER_ADMIN")) {
+            UserEntity user = userRepository.findById(user_id).orElseThrow(
+                    () -> new DataNotFoundException("User with ID: " + user_id + " not found")
+            );
+            user.setIsActive(isActive);
+            userRepository.save(user);
+        } else {
+            throw new UnauthorizedException("Only SUPER_ADMIN can toggle user status"); 
+        } // TODO: INVALIDATE USER SESSION UNTILL ADMIN RE-ACTIVATE THE USER ACCOUNT OR TTL FOR DEACTIVATION
     }
 }
