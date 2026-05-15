@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/v1/merchant/category/**").permitAll()
                         .requestMatchers("/api/v1/merchant/**").hasRole("MERCHANT")
-                    .requestMatchers("/api/v1/transactions/**").hasRole("MERCHANT")
+                    .requestMatchers("/api/v1/transactions/**").authenticated()
                         .requestMatchers("/api/v1/user/**").authenticated()
                         .anyRequest().authenticated()
                 )
