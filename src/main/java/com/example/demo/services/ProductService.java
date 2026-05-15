@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface ProductService {
     Page<ResProductDto> getAllProduct(int page, int size);
 
+    Page<ResProductDto> getProductsByMerchantId(UUID merchantId, int page, int size);
+
     ResProductDto getProductById(UUID id);
 
     ResCreateProductDto createProduct(ReqCreateProductDto request, MultipartFile file);

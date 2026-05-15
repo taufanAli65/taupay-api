@@ -40,6 +40,12 @@ public class ProductMapper extends BaseMapper<ProductEntity, ReqCreateProductDto
         if (entity.getImageName() != null) {
             response.setImageUrl(fileService.getPublicUrl("products", entity.getImageName()));
         }
+
+        if (entity.getCategory() != null) {
+            ResProductCategoryDto categoryDto = new ResProductCategoryDto();
+            map(entity.getCategory(), categoryDto);
+            response.setCategory(categoryDto);
+        }
         
         return response;
     }

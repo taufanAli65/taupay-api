@@ -16,6 +16,9 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
     Page<ProductEntity> findAllByMerchantIdAndIsActiveTrue(UUID merchantId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"merchant.account", "merchant.category", "category", "quantityEntity"})
+    Page<ProductEntity> findAllByMerchantId(UUID merchantId, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"merchant.account", "merchant.category", "category", "quantityEntity"})
     Page<ProductEntity> findAllByIsActiveTrue(Pageable pageable);
 
     @EntityGraph(attributePaths = {"merchant.account", "merchant.category", "category", "quantityEntity"})
