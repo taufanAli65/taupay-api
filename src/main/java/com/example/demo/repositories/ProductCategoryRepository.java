@@ -12,5 +12,7 @@ import java.util.UUID;
 public interface ProductCategoryRepository extends JpaRepository<ProductCategoryEntity, UUID> {
     List<ProductCategoryEntity> findAllByMerchantId(UUID merchantId);
 
+    List<ProductCategoryEntity> findAllByMerchantIdOrderByNameAsc(UUID merchantId);
+
     Optional<ProductCategoryEntity> findByIdAndMerchantId(UUID id, UUID merchantId);
 }

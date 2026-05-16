@@ -9,10 +9,12 @@ import com.example.demo.exceptions.UnauthorizedException;
 import com.example.demo.mappers.ProductCategoryMapper;
 import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.repositories.ProductCategoryRepository;
+import com.example.demo.repositories.ProductRepository;
 import com.example.demo.services.ProductCategoryService;
 import com.example.demo.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,13 +25,14 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     private final ProductCategoryRepository productCategoryRepository;
     private final ProductCategoryMapper productCategoryMapper;
     private final MerchantRepository merchantRepository;
+    private final ProductRepository productRepository;
 
     @Override
     public List<ResProductCategoryDto> getAllProductCategories() {
         MerchantEntity merchant = getMerchantByProfile();
-        return productCategoryRepository.findAllByMerchantId(merchant.getId())
+        return productCategoryRepository.findAllByMerchantIdOrderByNameAsc(merchant.getId())
                 .stream()
-                .map(category -> productCategoryMapper.toProductCategoryResponse(category, category.getMerchant()))
+                .map(category -> productCategoryMapper.toProductCategoryResponse(category, merchant))
                 .toList();
     }
 
@@ -64,11 +67,13 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     }
 
     @Override
+    @Transactional
     public void deleteProductCategory(UUID id) {
         MerchantEntity merchant = getMerchantByProfile();
         ProductCategoryEntity category = productCategoryRepository.findByIdAndMerchantId(id, merchant.getId())
                 .orElseThrow(() -> new DataNotFoundException("Category not found"));
 
+        productRepository.setCategoryToNull(category.getId());
         productCategoryRepository.deleteById(category.getId());
     }
 

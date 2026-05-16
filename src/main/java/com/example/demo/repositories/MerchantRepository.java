@@ -22,6 +22,8 @@ public interface MerchantRepository extends JpaRepository<MerchantEntity, UUID>,
     @EntityGraph(attributePaths = {"account", "category"})
     Page<MerchantEntity> findAllByOrderByNameAsc(Pageable pageable);
 
+    boolean existsByCategoryId(UUID categoryId);
+
     @Override
     @EntityGraph(attributePaths = {"account", "category"})
     Optional<MerchantEntity> findById(UUID merchantId);

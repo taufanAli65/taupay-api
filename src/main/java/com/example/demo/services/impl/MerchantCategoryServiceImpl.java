@@ -4,9 +4,11 @@ import com.example.demo.config.CacheNames;
 import com.example.demo.dtos.requests.ReqMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.entities.MerchantCategoryEntity;
+import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.MerchantCategoryMapper;
 import com.example.demo.repositories.MerchantCategoryRepository;
+import com.example.demo.repositories.MerchantRepository;
 import com.example.demo.services.MerchantCategoryService;
 
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +29,11 @@ import java.util.stream.Collectors;
 public class MerchantCategoryServiceImpl implements MerchantCategoryService {
     private final MerchantCategoryRepository merchantCategoryRepository;
     private final MerchantCategoryMapper merchantCategoryMapper;
+    private final MerchantRepository merchantRepository;
 
     @Override
     @Transactional
-    @Caching(
-            put = @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#result.id"),
-            evict = @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, key = "'all'")
-    )
+    @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#result.id")
     public ResMerchantCategoryDto createMerchantCategory(ReqMerchantCategoryDto req) {
         MerchantCategoryEntity merchantCategory = new MerchantCategoryEntity();
         merchantCategory.setName(req.getName());
@@ -53,23 +52,22 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id"),
-            @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, key = "'all'")
-    })
+    @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id")
     public void deleteMerchantCategory(UUID id) {
         if (!merchantCategoryRepository.existsById(id)) {
             throw new DataNotFoundException("Merchant Category with ID: " + id + " not found");
         }
+
+        if (merchantRepository.existsByCategoryId(id)) {
+            throw new BadRequestException("Cannot delete category because it is still being used by merchants");
+        }
+
         merchantCategoryRepository.deleteById(id);
     }
 
     @Override
     @Transactional
-    @Caching(
-            put = @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id"),
-            evict = @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, key = "'all'")
-    )
+    @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id")
     public ResMerchantCategoryDto updateMerchantCategoryName(UUID id, ReqMerchantCategoryDto req) {
         MerchantCategoryEntity merchantCategory = merchantCategoryRepository.findById(id).orElseThrow(
                 () -> new DataNotFoundException("Merchant Category with ID: " + id + " not found")
