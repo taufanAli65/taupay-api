@@ -46,18 +46,25 @@ public class ProductServiceImpl implements ProductService {
     private final FileService fileService;
 
     @Override
-    public Page<ResProductDto> getAllProduct(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ProductEntity> products;
+    public Page<ResProductDto> getAllProduct(ReqProductFilterDto filterDto, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        MerchantEntity merchant = getMerchantByProfile();
 
-        if (SecurityUtils.hasRole("SUPER_ADMIN")) {
-            products = productRepository.findAllByIsActiveTrue(pageable);
-        } else {
-            MerchantEntity merchant = getMerchantByProfile();
-            products = productRepository.findAllByMerchantIdAndIsActiveTrue(merchant.getId(), pageable);
-        }
-        
-        return products.map(product -> productMapper.toProductResponse(product, product.getMerchant()));
+        filterDto.setIsActive(true);
+
+        Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto, merchant.getId());
+        return productRepository.findAll(spec, pageRequest).map(product -> productMapper.toProductResponse(product, product.getMerchant()));
+    }
+
+    @Override
+    public Page<ResProductDto> findDeactivatedProducts(ReqProductFilterDto filterDto, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        MerchantEntity merchant = getMerchantByProfile();
+
+        filterDto.setIsActive(false);
+
+        Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto, merchant.getId());
+        return productRepository.findAll(spec, pageRequest).map(product -> productMapper.toProductResponse(product, product.getMerchant()));
     }
 
     @Override
@@ -66,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto);
+        Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto, null);
         return productRepository.findAll(spec, pageRequest).map(product -> productMapper.toProductResponse(product, product.getMerchant()));
     }
 

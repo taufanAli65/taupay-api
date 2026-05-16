@@ -12,23 +12,40 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ProductSpecification {
 
-    public static Specification<ProductEntity> filterBy(ReqProductFilterDto filterDto) {
+    public static Specification<ProductEntity> filterBy(ReqProductFilterDto filterDto, UUID merchantId) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            Join<ProductEntity, ProductCategoryEntity> categoryJoin = root.join("category", JoinType.LEFT);
+            Join<ProductEntity, ProductQuantityEntity> quantityJoin = root.join("quantityEntity", JoinType.LEFT);
+            Join<ProductEntity, MerchantEntity> merchantJoin = root.join("merchant", JoinType.LEFT);
+
+            if (merchantId != null) {
+                predicates.add(cb.equal(merchantJoin.get("id"), merchantId));
+            }
 
             if (filterDto.getIsActive() != null) {
                 predicates.add(cb.equal(root.get("isActive"), filterDto.getIsActive()));
             }
 
+            if (filterDto.getCategoryId() != null) {
+                predicates.add(cb.equal(categoryJoin.get("id"), filterDto.getCategoryId()));
+            }
+
+            if (filterDto.getInStock() != null) {
+                if (filterDto.getInStock()) {
+                    predicates.add(cb.greaterThan(quantityJoin.get("stock"), 0));
+                } else {
+                    predicates.add(cb.equal(quantityJoin.get("stock"), 0));
+                }
+            }
+
             if (filterDto.getSearch() != null && !filterDto.getSearch().isBlank()) {
                 String pattern = "%" + filterDto.getSearch().toLowerCase() + "%";
-                Join<ProductEntity, ProductCategoryEntity> categoryJoin = root.join("category", JoinType.LEFT);
-                Join<ProductEntity, MerchantEntity> merchantJoin = root.join("merchant", JoinType.LEFT);
-                Join<ProductEntity, ProductQuantityEntity> quantityJoin = root.join("quantityEntity", JoinType.LEFT);
-
                 Predicate nameLike = cb.like(cb.lower(root.get("name")), pattern);
                 Predicate priceLike = cb.like(cb.function("to_char", String.class, root.get("price"), cb.literal("FM999999999999999999")), pattern);
                 Predicate stockLike = cb.like(cb.function("to_char", String.class, quantityJoin.get("stock"), cb.literal("FM999999999999999999")), pattern);

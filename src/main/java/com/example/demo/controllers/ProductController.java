@@ -1,11 +1,14 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
+import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.*;
 import com.example.demo.services.ProductService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,14 +30,29 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
+    @Operation(summary = "List active products", description = "Returns a paginated list of active products for the authenticated merchant with optional search and filters.")
     public ResponseEntity<BaseResponse<List<ResProductDto>>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @ParameterObject @Valid ReqProductFilterDto filterDto
     ) {
-        Page<ResProductDto> productPage = productService.getAllProduct(page, size);
+        int size = filterDto.getSize() == null ? 10 : filterDto.getSize();
+        int page = filterDto.getPage() == null ? 0 : filterDto.getPage();
+        Page<ResProductDto> productPage = productService.getAllProduct(filterDto, page, size);
         ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
 
         return ResponseEntity.ok(BaseResponse.success("Products Retrieved Successfully", productPage.getContent(), pagination));
+    }
+
+    @GetMapping("/deactivated")
+    @Operation(summary = "List deactivated products", description = "Returns a paginated list of deactivated products for the authenticated merchant.")
+    public ResponseEntity<BaseResponse<List<ResProductDto>>> getDeactivatedProducts(
+            @ParameterObject @Valid ReqProductFilterDto filterDto
+    ) {
+        int size = filterDto.getSize() == null ? 10 : filterDto.getSize();
+        int page = filterDto.getPage() == null ? 0 : filterDto.getPage();
+        Page<ResProductDto> productPage = productService.findDeactivatedProducts(filterDto, page, size);
+        ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
+
+        return ResponseEntity.ok(BaseResponse.success("Deactivated Products Retrieved Successfully", productPage.getContent(), pagination));
     }
 
     @GetMapping("/{id}")
