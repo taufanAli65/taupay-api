@@ -66,26 +66,18 @@ public class ProductController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BaseResponse<ResCreateProductDto>> create(
-            @RequestPart("data") @Valid ReqCreateProductDto request,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @ModelAttribute @Valid ReqCreateProductDto request,
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         ResCreateProductDto product = productService.createProduct(request, file);
         return ResponseEntity.ok(BaseResponse.success("Product Created Successfully", product));
     }
 
-    @PostMapping("/bulk")
-    public ResponseEntity<BaseResponse<List<ResCreateProductDto>>> createBulk(
-            @RequestBody List<@Valid ReqCreateProductDto> requests
-    ) {
-        List<ResCreateProductDto> products = productService.createBulkProducts(requests);
-        return ResponseEntity.ok(BaseResponse.success("Bulk Products Created Successfully", products));
-    }
-
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BaseResponse<ResCreateProductDto>> update(
             @PathVariable UUID id,
-            @RequestPart("data") @Valid ReqCreateProductDto request,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @ModelAttribute @Valid ReqCreateProductDto request,
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         ResCreateProductDto product = productService.updateProduct(id, request, file);
         return ResponseEntity.ok(BaseResponse.success("Product Updated Successfully", product));

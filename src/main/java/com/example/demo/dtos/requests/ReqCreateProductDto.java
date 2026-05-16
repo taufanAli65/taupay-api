@@ -23,4 +23,6 @@ public class ReqCreateProductDto {
     private Integer stock;
 
     private UUID categoryId;
+
+    private Boolean isImageRemoved = false;
 }

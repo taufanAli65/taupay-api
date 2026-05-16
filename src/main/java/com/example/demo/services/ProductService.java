@@ -22,8 +22,6 @@ public interface ProductService {
 
     ResCreateProductDto createProduct(ReqCreateProductDto request, MultipartFile file);
 
-    List<ResCreateProductDto> createBulkProducts(List<ReqCreateProductDto> requests);
-
     ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request, MultipartFile file);
 
     void deactivateProduct(UUID id);

@@ -130,35 +130,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public List<ResCreateProductDto> createBulkProducts(List<ReqCreateProductDto> requests) {
-        MerchantEntity merchant = getMerchantByProfile();
-
-        List<ProductEntity> products = requests.stream().map(request -> {
-            ProductCategoryEntity category = null;
-            if (request.getCategoryId() != null) {
-                category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
-                        .orElseThrow(() -> new DataNotFoundException("Category not found for product: " + request.getName()));
-            }
-            
-            ProductEntity product = productMapper.toEntity(request);
-            product.setMerchant(merchant);
-            product.setCategory(category);
-
-            ProductQuantityEntity quantity = new ProductQuantityEntity();
-            quantity.setProduct(product);
-            quantity.setStock(request.getStock());
-            product.setQuantityEntity(quantity);
-
-            return product;
-        }).toList();
-
-        return productRepository.saveAll(products).stream()
-                .map(productMapper::toCreateResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional
     public ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request, MultipartFile file) {
         MerchantEntity merchant = getMerchantByProfile();
         ProductEntity product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchant.getId())
@@ -182,17 +153,20 @@ public class ProductServiceImpl implements ProductService {
         }
 
         String oldImageName = product.getImageName();
-        if (file != null) {
+
+        if (Boolean.TRUE.equals(request.getIsImageRemoved())) {
+            product.setImageName(null);
+            if (oldImageName != null) {
+                deleteProductImage(oldImageName);
+            }
+        } else if (file != null && !file.isEmpty()) {
             String newImageName = uploadProductImage(file);
             product.setImageName(newImageName);
+            if (oldImageName != null) {
+                deleteProductImage(oldImageName);
+            }
         }
-
         ProductEntity savedProduct = productRepository.save(product);
-
-        if (file != null && oldImageName != null) {
-            deleteProductImage(oldImageName);
-        }
-
         return productMapper.toCreateResponse(savedProduct);
     }
 
