@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductService {
-    Page<ResProductDto> getAllProduct(int page, int size);
+    Page<ResProductDto> getAllProduct(ReqProductFilterDto filterDto, int page, int size);
+
+    Page<ResProductDto> findDeactivatedProducts(ReqProductFilterDto filterDto, int page, int size);
 
     Page<ResProductDto> findAllProducts(ReqProductFilterDto filterDto);
 
