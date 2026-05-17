@@ -2,8 +2,10 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.requests.ReqProductFilterDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
+import com.example.demo.dtos.responses.ResProductStatisticsDto;
 import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.ProductCategoryEntity;
 import com.example.demo.entities.ProductEntity;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +50,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ResProductDto> getAllProduct(ReqProductFilterDto filterDto, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
         MerchantEntity merchant = getMerchantByProfile();
 
         filterDto.setIsActive(true);
@@ -58,7 +68,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ResProductDto> findDeactivatedProducts(ReqProductFilterDto filterDto, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
         MerchantEntity merchant = getMerchantByProfile();
 
         filterDto.setIsActive(false);
@@ -71,7 +88,14 @@ public class ProductServiceImpl implements ProductService {
     public Page<ResProductDto> findAllProducts(ReqProductFilterDto filterDto) {
         int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto, null);
         return productRepository.findAll(spec, pageRequest).map(product -> productMapper.toProductResponse(product, product.getMerchant()));
@@ -98,6 +122,27 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productMapper.toProductResponse(product, product.getMerchant());
+    }
+
+    @Override
+    public ResProductStatisticsDto getProductStatistics() {
+        MerchantEntity merchant = getMerchantByProfile();
+        UUID merchantId = merchant.getId();
+
+        return ResProductStatisticsDto.builder()
+                .totalProducts(productRepository.countByMerchantId(merchantId))
+                .activeProducts(productRepository.countByMerchantIdAndIsActiveTrue(merchantId))
+                .deactivatedProducts(productRepository.countByMerchantIdAndIsActiveFalse(merchantId))
+                .build();
+    }
+
+    @Override
+    public ResCommonStatisticsDto getAdminProductStatistics() {
+        return ResCommonStatisticsDto.builder()
+                .total(productRepository.count())
+                .active(productRepository.countByIsActiveTrue())
+                .deactivated(productRepository.countByIsActiveFalse())
+                .build();
     }
 
     @Override
@@ -130,35 +175,6 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public List<ResCreateProductDto> createBulkProducts(List<ReqCreateProductDto> requests) {
-        MerchantEntity merchant = getMerchantByProfile();
-
-        List<ProductEntity> products = requests.stream().map(request -> {
-            ProductCategoryEntity category = null;
-            if (request.getCategoryId() != null) {
-                category = productCategoryRepository.findByIdAndMerchantId(request.getCategoryId(), merchant.getId())
-                        .orElseThrow(() -> new DataNotFoundException("Category not found for product: " + request.getName()));
-            }
-            
-            ProductEntity product = productMapper.toEntity(request);
-            product.setMerchant(merchant);
-            product.setCategory(category);
-
-            ProductQuantityEntity quantity = new ProductQuantityEntity();
-            quantity.setProduct(product);
-            quantity.setStock(request.getStock());
-            product.setQuantityEntity(quantity);
-
-            return product;
-        }).toList();
-
-        return productRepository.saveAll(products).stream()
-                .map(productMapper::toCreateResponse)
-                .toList();
-    }
-
-    @Override
-    @Transactional
     public ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request, MultipartFile file) {
         MerchantEntity merchant = getMerchantByProfile();
         ProductEntity product = productRepository.findByIdAndMerchantIdAndIsActiveTrue(id, merchant.getId())
@@ -182,17 +198,20 @@ public class ProductServiceImpl implements ProductService {
         }
 
         String oldImageName = product.getImageName();
-        if (file != null) {
+
+        if (Boolean.TRUE.equals(request.getIsImageRemoved())) {
+            product.setImageName(null);
+            if (oldImageName != null) {
+                deleteProductImage(oldImageName);
+            }
+        } else if (file != null && !file.isEmpty()) {
             String newImageName = uploadProductImage(file);
             product.setImageName(newImageName);
+            if (oldImageName != null) {
+                deleteProductImage(oldImageName);
+            }
         }
-
         ProductEntity savedProduct = productRepository.save(product);
-
-        if (file != null && oldImageName != null) {
-            deleteProductImage(oldImageName);
-        }
-
         return productMapper.toCreateResponse(savedProduct);
     }
 

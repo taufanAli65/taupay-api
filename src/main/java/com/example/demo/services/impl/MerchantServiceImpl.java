@@ -4,6 +4,7 @@ import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.requests.ReqMerchantFilterDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
 import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.MerchantCategoryEntity;
@@ -22,6 +23,7 @@ import com.example.demo.services.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -74,7 +76,15 @@ public class MerchantServiceImpl implements MerchantService {
     public Page<ResMerchantDto> findAllMerchants(ReqMerchantFilterDto filterDto) {
         int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         Specification<MerchantEntity> spec = MerchantSpecification.filterBy(filterDto);
         return merchantRepository.findAll(spec, pageRequest).map(merchantMapper::toResponse);
@@ -109,6 +119,15 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setIsActive(request.getIsActive());
         return merchantMapper.toResponse(merchantRepository.save(merchant));
         // TODO: INVALIDATE MERCHANT SESSION UNTILL ADMIN RE-ACTIVATE THE MERCHANT ACCOUNT OR TTL FOR DEACTIVATION
+    }
+
+    @Override
+    public ResCommonStatisticsDto getAdminMerchantStatistics() {
+        return ResCommonStatisticsDto.builder()
+                .total(merchantRepository.count())
+                .active(merchantRepository.countByIsActiveTrue())
+                .deactivated(merchantRepository.countByIsActiveFalse())
+                .build();
     }
 
     private MerchantCategoryEntity findCategoryById(UUID categoryId) {

@@ -1,8 +1,10 @@
 package com.example.demo.services;
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.requests.ReqProductFilterDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
+import com.example.demo.dtos.responses.ResProductStatisticsDto;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,9 +24,11 @@ public interface ProductService {
 
     ResCreateProductDto createProduct(ReqCreateProductDto request, MultipartFile file);
 
-    List<ResCreateProductDto> createBulkProducts(List<ReqCreateProductDto> requests);
-
     ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request, MultipartFile file);
+
+    ResProductStatisticsDto getProductStatistics();
+
+    ResCommonStatisticsDto getAdminProductStatistics();
 
     void deactivateProduct(UUID id);
 

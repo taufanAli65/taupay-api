@@ -4,6 +4,7 @@ import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResProductDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.services.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +37,13 @@ public class AdminProductController {
         ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
 
         return ResponseEntity.ok(BaseResponse.success("Products Retrieved Successfully", productPage.getContent(), pagination));
+    }
+
+    @GetMapping("/statistics")
+    @Operation(summary = "Get product statistics", description = "Returns global counts for total, active, and deactivated products.")
+    public ResponseEntity<BaseResponse<ResCommonStatisticsDto>> getStatistics() {
+        ResCommonStatisticsDto statistics = productService.getAdminProductStatistics();
+        return ResponseEntity.ok(BaseResponse.success("Product Statistics Retrieved Successfully", statistics));
     }
 
     @GetMapping("/{id}")

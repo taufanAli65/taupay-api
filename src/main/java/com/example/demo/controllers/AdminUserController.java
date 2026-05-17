@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResUserDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.services.UserService;
 
@@ -39,6 +40,13 @@ public class AdminUserController {
         ResPaginationDto pagination = new ResPaginationDto(users.getSize(), users.getNumber(), users.getTotalElements(), users.getTotalPages());
         BaseResponse<Iterable<ResUserDto>> response = BaseResponse.success("Users Retrieved Successfully", users.getContent(), pagination);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics")
+    @Operation(summary = "Get user statistics", description = "Returns global counts for total, active, and deactivated users.")
+    public ResponseEntity<BaseResponse<ResCommonStatisticsDto>> getStatistics() {
+        ResCommonStatisticsDto statistics = userService.getAdminUserStatistics();
+        return ResponseEntity.ok(BaseResponse.success("User Statistics Retrieved Successfully", statistics));
     }
 
     @GetMapping("/{id}")
@@ -71,5 +79,4 @@ public class AdminUserController {
         BaseResponse<Void> response = BaseResponse.success("User Activated Successfully", null, null);
         return ResponseEntity.ok(response);
     }
-
 }

@@ -6,6 +6,7 @@ import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResPaginationDto;
 import com.example.demo.dtos.responses.ResProductDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.MerchantCategoryService;
 import com.example.demo.services.ProductService;
@@ -51,6 +52,13 @@ public class AdminMerchantController {
         ResPaginationDto pagination = new ResPaginationDto(merchants.getSize(), merchants.getNumber(), merchants.getTotalElements(), merchants.getTotalPages());
         BaseResponse<Iterable<ResMerchantDto>> response = BaseResponse.success("Merchants Retrieved Successfully", merchants.getContent(), pagination);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics")
+    @Operation(summary = "Get merchant statistics", description = "Returns global counts for total, active, and deactivated merchants.")
+    public ResponseEntity<BaseResponse<ResCommonStatisticsDto>> getStatistics() {
+        ResCommonStatisticsDto statistics = merchantService.getAdminMerchantStatistics();
+        return ResponseEntity.ok(BaseResponse.success("Merchant Statistics Retrieved Successfully", statistics));
     }
 
     @GetMapping("/{id}")
