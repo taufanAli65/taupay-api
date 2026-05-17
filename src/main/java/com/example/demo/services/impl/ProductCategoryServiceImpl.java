@@ -28,10 +28,17 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     private final ProductRepository productRepository;
 
     @Override
-    public List<ResProductCategoryDto> getAllProductCategories() {
+    public List<ResProductCategoryDto> getAllProductCategories(String search) {
         MerchantEntity merchant = getMerchantByProfile();
-        return productCategoryRepository.findAllByMerchantIdOrderByNameAsc(merchant.getId())
-                .stream()
+        List<ProductCategoryEntity> categories;
+        
+        if (search != null && !search.isBlank()) {
+            categories = productCategoryRepository.findAllByMerchantIdAndNameContainingIgnoreCaseOrderByNameAsc(merchant.getId(), search);
+        } else {
+            categories = productCategoryRepository.findAllByMerchantIdOrderByNameAsc(merchant.getId());
+        }
+
+        return categories.stream()
                 .map(category -> productCategoryMapper.toProductCategoryResponse(category, merchant))
                 .toList();
     }

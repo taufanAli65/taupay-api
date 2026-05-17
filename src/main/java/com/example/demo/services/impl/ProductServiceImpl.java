@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +48,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ResProductDto> getAllProduct(ReqProductFilterDto filterDto, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
         MerchantEntity merchant = getMerchantByProfile();
 
         filterDto.setIsActive(true);
@@ -58,7 +66,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ResProductDto> findDeactivatedProducts(ReqProductFilterDto filterDto, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
         MerchantEntity merchant = getMerchantByProfile();
 
         filterDto.setIsActive(false);
@@ -71,7 +86,14 @@ public class ProductServiceImpl implements ProductService {
     public Page<ResProductDto> findAllProducts(ReqProductFilterDto filterDto) {
         int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         Specification<ProductEntity> spec = ProductSpecification.filterBy(filterDto, null);
         return productRepository.findAll(spec, pageRequest).map(product -> productMapper.toProductResponse(product, product.getMerchant()));

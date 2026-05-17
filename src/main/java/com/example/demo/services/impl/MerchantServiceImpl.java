@@ -22,6 +22,7 @@ import com.example.demo.services.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -74,7 +75,15 @@ public class MerchantServiceImpl implements MerchantService {
     public Page<ResMerchantDto> findAllMerchants(ReqMerchantFilterDto filterDto) {
         int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         Specification<MerchantEntity> spec = MerchantSpecification.filterBy(filterDto);
         return merchantRepository.findAll(spec, pageRequest).map(merchantMapper::toResponse);

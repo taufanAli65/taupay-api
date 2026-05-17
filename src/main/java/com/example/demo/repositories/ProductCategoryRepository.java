@@ -14,5 +14,7 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
 
     List<ProductCategoryEntity> findAllByMerchantIdOrderByNameAsc(UUID merchantId);
 
+    List<ProductCategoryEntity> findAllByMerchantIdAndNameContainingIgnoreCaseOrderByNameAsc(UUID merchantId, String name);
+
     Optional<ProductCategoryEntity> findByIdAndMerchantId(UUID id, UUID merchantId);
 }

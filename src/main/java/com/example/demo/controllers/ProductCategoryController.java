@@ -23,8 +23,10 @@ public class ProductCategoryController {
     private final ProductCategoryService productCategoryService;
 
     @GetMapping
-    public ResponseEntity<BaseResponse<List<ResProductCategoryDto>>> getAll() {
-        List<ResProductCategoryDto> categories = productCategoryService.getAllProductCategories();
+    public ResponseEntity<BaseResponse<List<ResProductCategoryDto>>> getAll(
+            @RequestParam(required = false) String search
+    ) {
+        List<ResProductCategoryDto> categories = productCategoryService.getAllProductCategories(search);
         return ResponseEntity.ok(BaseResponse.success("Product Category Retrieved Successfully", categories));
     }
 
