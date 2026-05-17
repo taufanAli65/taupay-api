@@ -40,4 +40,10 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
 
     @EntityGraph(attributePaths = {"merchant.account", "merchant.category", "category", "quantityEntity"})
     Optional<ProductEntity> findByIdAndMerchantId(UUID id, UUID merchantId);
+
+    long countByMerchantId(UUID merchantId);
+
+    long countByMerchantIdAndIsActiveTrue(UUID merchantId);
+
+    long countByMerchantIdAndIsActiveFalse(UUID merchantId);
 }

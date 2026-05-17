@@ -4,6 +4,7 @@ import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
+import com.example.demo.dtos.responses.ResProductStatisticsDto;
 import com.example.demo.entities.MerchantEntity;
 import com.example.demo.entities.ProductCategoryEntity;
 import com.example.demo.entities.ProductEntity;
@@ -120,6 +121,18 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return productMapper.toProductResponse(product, product.getMerchant());
+    }
+
+    @Override
+    public ResProductStatisticsDto getProductStatistics() {
+        MerchantEntity merchant = getMerchantByProfile();
+        UUID merchantId = merchant.getId();
+
+        return ResProductStatisticsDto.builder()
+                .totalProducts(productRepository.countByMerchantId(merchantId))
+                .activeProducts(productRepository.countByMerchantIdAndIsActiveTrue(merchantId))
+                .deactivatedProducts(productRepository.countByMerchantIdAndIsActiveFalse(merchantId))
+                .build();
     }
 
     @Override

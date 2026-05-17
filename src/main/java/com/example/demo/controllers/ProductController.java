@@ -55,6 +55,13 @@ public class ProductController {
         return ResponseEntity.ok(BaseResponse.success("Deactivated Products Retrieved Successfully", productPage.getContent(), pagination));
     }
 
+    @GetMapping("/statistics")
+    @Operation(summary = "Get product statistics", description = "Returns counts for total, active, and deactivated products for the authenticated merchant.")
+    public ResponseEntity<BaseResponse<ResProductStatisticsDto>> getStatistics() {
+        ResProductStatisticsDto statistics = productService.getProductStatistics();
+        return ResponseEntity.ok(BaseResponse.success("Product Statistics Retrieved Successfully", statistics));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<BaseResponse<ResProductDto>> getProductById(
             @PathVariable("id") UUID id
