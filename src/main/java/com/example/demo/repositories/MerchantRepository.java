@@ -27,4 +27,8 @@ public interface MerchantRepository extends JpaRepository<MerchantEntity, UUID>,
     @Override
     @EntityGraph(attributePaths = {"account", "category"})
     Optional<MerchantEntity> findById(UUID merchantId);
+
+    long countByIsActiveTrue();
+
+    long countByIsActiveFalse();
 }

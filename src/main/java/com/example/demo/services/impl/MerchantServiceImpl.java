@@ -4,6 +4,7 @@ import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.requests.ReqMerchantFilterDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
 import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.MerchantCategoryEntity;
@@ -118,6 +119,15 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setIsActive(request.getIsActive());
         return merchantMapper.toResponse(merchantRepository.save(merchant));
         // TODO: INVALIDATE MERCHANT SESSION UNTILL ADMIN RE-ACTIVATE THE MERCHANT ACCOUNT OR TTL FOR DEACTIVATION
+    }
+
+    @Override
+    public ResCommonStatisticsDto getAdminMerchantStatistics() {
+        return ResCommonStatisticsDto.builder()
+                .total(merchantRepository.count())
+                .active(merchantRepository.countByIsActiveTrue())
+                .deactivated(merchantRepository.countByIsActiveFalse())
+                .build();
     }
 
     private MerchantCategoryEntity findCategoryById(UUID categoryId) {

@@ -1,6 +1,7 @@
 package com.example.demo.services;
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.requests.ReqProductFilterDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.dtos.responses.ResProductStatisticsDto;
@@ -26,6 +27,8 @@ public interface ProductService {
     ResCreateProductDto updateProduct(UUID id, ReqCreateProductDto request, MultipartFile file);
 
     ResProductStatisticsDto getProductStatistics();
+
+    ResCommonStatisticsDto getAdminProductStatistics();
 
     void deactivateProduct(UUID id);
 

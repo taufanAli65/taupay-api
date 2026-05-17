@@ -2,6 +2,7 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
 import com.example.demo.dtos.requests.ReqProductFilterDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResCreateProductDto;
 import com.example.demo.dtos.responses.ResProductDto;
 import com.example.demo.dtos.responses.ResProductStatisticsDto;
@@ -132,6 +133,15 @@ public class ProductServiceImpl implements ProductService {
                 .totalProducts(productRepository.countByMerchantId(merchantId))
                 .activeProducts(productRepository.countByMerchantIdAndIsActiveTrue(merchantId))
                 .deactivatedProducts(productRepository.countByMerchantIdAndIsActiveFalse(merchantId))
+                .build();
+    }
+
+    @Override
+    public ResCommonStatisticsDto getAdminProductStatistics() {
+        return ResCommonStatisticsDto.builder()
+                .total(productRepository.count())
+                .active(productRepository.countByIsActiveTrue())
+                .deactivated(productRepository.countByIsActiveFalse())
                 .build();
     }
 

@@ -46,4 +46,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
     long countByMerchantIdAndIsActiveTrue(UUID merchantId);
 
     long countByMerchantIdAndIsActiveFalse(UUID merchantId);
+
+    long countByIsActiveTrue();
+
+    long countByIsActiveFalse();
 }

@@ -2,6 +2,7 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.DataNotFoundException;
@@ -77,5 +78,14 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UnauthorizedException("Only SUPER_ADMIN can toggle user status"); 
         } // TODO: INVALIDATE USER SESSION UNTILL ADMIN RE-ACTIVATE THE USER ACCOUNT OR TTL FOR DEACTIVATION
+    }
+
+    @Override
+    public ResCommonStatisticsDto getAdminUserStatistics() {
+        return ResCommonStatisticsDto.builder()
+                .total(userRepository.count())
+                .active(userRepository.countByIsActiveTrue())
+                .deactivated(userRepository.countByIsActiveFalse())
+                .build();
     }
 }
