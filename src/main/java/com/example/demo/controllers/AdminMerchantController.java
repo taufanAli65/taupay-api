@@ -1,16 +1,15 @@
 package com.example.demo.controllers;
 
-import com.example.demo.dtos.requests.ReqMerchantCategoryDto;
-import com.example.demo.dtos.requests.ReqMerchantDto;
-import com.example.demo.dtos.requests.ReqMerchantFilterDto;
-import com.example.demo.dtos.requests.ReqMerchantStatusDto;
-import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
+import com.example.demo.dtos.requests.*;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResMerchantCategoryDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResPaginationDto;
+import com.example.demo.dtos.responses.ResProductDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.MerchantCategoryService;
+import com.example.demo.services.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -31,6 +31,7 @@ import java.util.UUID;
 public class AdminMerchantController {
     private final MerchantService merchantService;
     private final MerchantCategoryService merchantCategoryService;
+    private final ProductService productService;
 
     @PostMapping({"", "/"})
     @Operation(summary = "Create merchant", description = "Creates a merchant account and profile as a super admin.")
@@ -53,6 +54,13 @@ public class AdminMerchantController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/statistics")
+    @Operation(summary = "Get merchant statistics", description = "Returns global counts for total, active, and deactivated merchants.")
+    public ResponseEntity<BaseResponse<ResCommonStatisticsDto>> getStatistics() {
+        ResCommonStatisticsDto statistics = merchantService.getAdminMerchantStatistics();
+        return ResponseEntity.ok(BaseResponse.success("Merchant Statistics Retrieved Successfully", statistics));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get merchant by ID", description = "Returns a merchant profile by its identifier.")
     public ResponseEntity<BaseResponse<ResMerchantDto>> getMerchantById(
@@ -60,6 +68,21 @@ public class AdminMerchantController {
     ) {
         ResMerchantDto merchant = merchantService.getMerchantById(id);
         BaseResponse<ResMerchantDto> response = BaseResponse.success("Merchant Retrieved Successfully", merchant, null);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/products")
+    @Operation(summary = "Get merchant products", description = "Returns a paginated list of all products belonging to a merchant.")
+    public ResponseEntity<BaseResponse<List<ResProductDto>>> getMerchantProducts(
+            @PathVariable("id") UUID id,
+            @ParameterObject @Valid ReqPaginationDto paginationDto
+    ) {
+        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
+        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
+
+        Page<ResProductDto> products = productService.getProductsByMerchantId(id, page, size);
+        ResPaginationDto pagination = new ResPaginationDto(products.getSize(), products.getNumber(), products.getTotalElements(), products.getTotalPages());
+        BaseResponse<List<ResProductDto>> response = BaseResponse.success("Merchant Products Retrieved Successfully", products.getContent(), pagination);
         return ResponseEntity.ok(response);
     }
 

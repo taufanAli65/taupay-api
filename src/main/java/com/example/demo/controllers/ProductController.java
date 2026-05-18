@@ -1,11 +1,14 @@
 package com.example.demo.controllers;
 
 import com.example.demo.dtos.requests.ReqCreateProductDto;
+import com.example.demo.dtos.requests.ReqProductFilterDto;
 import com.example.demo.dtos.responses.*;
 import com.example.demo.services.ProductService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,14 +30,36 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
+    @Operation(summary = "List active products", description = "Returns a paginated list of active products for the authenticated merchant with optional search and filters.")
     public ResponseEntity<BaseResponse<List<ResProductDto>>> getAll(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @ParameterObject @Valid ReqProductFilterDto filterDto
     ) {
-        Page<ResProductDto> productPage = productService.getAllProduct(page, size);
+        int size = filterDto.getSize() == null ? 10 : filterDto.getSize();
+        int page = filterDto.getPage() == null ? 0 : filterDto.getPage();
+        Page<ResProductDto> productPage = productService.getAllProduct(filterDto, page, size);
         ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
 
         return ResponseEntity.ok(BaseResponse.success("Products Retrieved Successfully", productPage.getContent(), pagination));
+    }
+
+    @GetMapping("/deactivated")
+    @Operation(summary = "List deactivated products", description = "Returns a paginated list of deactivated products for the authenticated merchant.")
+    public ResponseEntity<BaseResponse<List<ResProductDto>>> getDeactivatedProducts(
+            @ParameterObject @Valid ReqProductFilterDto filterDto
+    ) {
+        int size = filterDto.getSize() == null ? 10 : filterDto.getSize();
+        int page = filterDto.getPage() == null ? 0 : filterDto.getPage();
+        Page<ResProductDto> productPage = productService.findDeactivatedProducts(filterDto, page, size);
+        ResPaginationDto pagination = new ResPaginationDto(productPage.getSize(), productPage.getNumber(), productPage.getTotalElements(), productPage.getTotalPages());
+
+        return ResponseEntity.ok(BaseResponse.success("Deactivated Products Retrieved Successfully", productPage.getContent(), pagination));
+    }
+
+    @GetMapping("/statistics")
+    @Operation(summary = "Get product statistics", description = "Returns counts for total, active, and deactivated products for the authenticated merchant.")
+    public ResponseEntity<BaseResponse<ResProductStatisticsDto>> getStatistics() {
+        ResProductStatisticsDto statistics = productService.getProductStatistics();
+        return ResponseEntity.ok(BaseResponse.success("Product Statistics Retrieved Successfully", statistics));
     }
 
     @GetMapping("/{id}")
@@ -48,26 +73,18 @@ public class ProductController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BaseResponse<ResCreateProductDto>> create(
-            @RequestPart("data") @Valid ReqCreateProductDto request,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @ModelAttribute @Valid ReqCreateProductDto request,
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         ResCreateProductDto product = productService.createProduct(request, file);
         return ResponseEntity.ok(BaseResponse.success("Product Created Successfully", product));
     }
 
-    @PostMapping("/bulk")
-    public ResponseEntity<BaseResponse<List<ResCreateProductDto>>> createBulk(
-            @RequestBody List<@Valid ReqCreateProductDto> requests
-    ) {
-        List<ResCreateProductDto> products = productService.createBulkProducts(requests);
-        return ResponseEntity.ok(BaseResponse.success("Bulk Products Created Successfully", products));
-    }
-
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BaseResponse<ResCreateProductDto>> update(
             @PathVariable UUID id,
-            @RequestPart("data") @Valid ReqCreateProductDto request,
-            @RequestPart(value = "file", required = false) MultipartFile file
+            @ModelAttribute @Valid ReqCreateProductDto request,
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
         ResCreateProductDto product = productService.updateProduct(id, request, file);
         return ResponseEntity.ok(BaseResponse.success("Product Updated Successfully", product));

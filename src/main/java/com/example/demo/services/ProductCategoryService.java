@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductCategoryService {
-    List<ResProductCategoryDto> getAllProductCategories();
-
+    List<ResProductCategoryDto> getAllProductCategories(String search);
     ResProductCategoryDto getProductCategoryById(UUID id);
 
     ResProductCategoryDto createProductCategory(ReqProductCategoryDto request);

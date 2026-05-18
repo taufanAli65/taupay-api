@@ -2,6 +2,7 @@ package com.example.demo.services.impl;
 
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
+import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.UserEntity;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -62,7 +64,15 @@ public class UserServiceImpl implements UserService {
     public Page<ResUserDto> findAllUsers(ReqUserFilterDto filterDto) {
         int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
-        PageRequest pageRequest = PageRequest.of(page, size);
+        
+        PageRequest pageRequest;
+        if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+                    ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         Specification<UserEntity> spec = UserSpecification.filterBy(filterDto);
 
@@ -89,5 +99,14 @@ public class UserServiceImpl implements UserService {
         );
         user.setPaymentLockedUntil(lockedUntil);
         userRepository.save(user);
+    }
+
+    @Override
+    public ResCommonStatisticsDto getAdminUserStatistics() {
+        return ResCommonStatisticsDto.builder()
+                .total(userRepository.count())
+                .active(userRepository.countByIsActiveTrue())
+                .deactivated(userRepository.countByIsActiveFalse())
+                .build();
     }
 }

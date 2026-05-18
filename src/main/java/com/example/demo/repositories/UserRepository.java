@@ -45,4 +45,8 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
     Page<ResUserDto> findAllUsers(Pageable pageable);
 
     Optional<UserEntity> findByAccountId(UUID id);
+
+    long countByIsActiveTrue();
+
+    long countByIsActiveFalse();
 }

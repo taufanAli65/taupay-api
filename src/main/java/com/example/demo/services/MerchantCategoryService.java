@@ -8,7 +8,7 @@ import java.util.UUID;
 public interface MerchantCategoryService {
     ResMerchantCategoryDto createMerchantCategory(ReqMerchantCategoryDto req);
     ResMerchantCategoryDto getMerchantCategoryById(UUID id);
-    List<ResMerchantCategoryDto> getAllMerchantCategories();
+    List<ResMerchantCategoryDto> getAllMerchantCategories(String search);
     ResMerchantCategoryDto updateMerchantCategoryName(UUID id, ReqMerchantCategoryDto req);
     void deleteMerchantCategory(UUID id);
 }
