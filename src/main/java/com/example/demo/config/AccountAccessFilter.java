@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class PaymentAccessFilter extends OncePerRequestFilter {
+public class AccountAccessFilter extends OncePerRequestFilter {
 
     private final AccountRepository accountRepository;
     private final AccountAccessService accountAccessService;
@@ -48,7 +48,10 @@ public class PaymentAccessFilter extends OncePerRequestFilter {
         }
 
         try {
-            accountAccessService.assertCanAccessPayments(account);
+            accountAccessService.assertCanLogin(account);
+            if (requiresPaymentAccessCheck(request)) {
+                accountAccessService.assertCanAccessPayments(account);
+            }
             filterChain.doFilter(request, response);
         } catch (AccountLockedException ex) {
             writeError(response, HttpStatus.LOCKED, ex.getMessage());
@@ -60,21 +63,29 @@ public class PaymentAccessFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
+        return path.startsWith("/api/v1/auth")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html");
+    }
+
+    private boolean requiresPaymentAccessCheck(HttpServletRequest request) {
+        String path = request.getServletPath();
         String method = request.getMethod();
 
         if (HttpMethod.POST.matches(method) && "/api/v1/transactions".equals(path)) {
-            return false;
+            return true;
         }
         if (HttpMethod.POST.matches(method) && path.matches("^/api/v1/transactions/[^/]+/callback$")) {
-            return false;
+            return true;
         }
         if (HttpMethod.GET.matches(method) && path.matches("^/api/v1/transactions/[^/]+/status$")) {
-            return false;
+            return true;
         }
         if (HttpMethod.GET.matches(method) && "/api/v1/user/transactions".equals(path)) {
-            return false;
+            return true;
         }
-        return !(HttpMethod.GET.matches(method) && "/api/v1/merchant/transactions".equals(path));
+        return HttpMethod.GET.matches(method) && "/api/v1/merchant/transactions".equals(path);
     }
 
     private void writeError(HttpServletResponse response, HttpStatus status, String message) throws IOException {
