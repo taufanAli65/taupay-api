@@ -39,21 +39,6 @@ public class FileService {
         );
         return fileName;
     }
-    
-    public String getFileUrl(String folder, String fileName) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET)
-                    .bucket(bucketName)
-                    .object(folder + "/" + fileName)
-                    .expiry(1, TimeUnit.HOURS)
-                    .build()
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate presigned URL");
-        }
-    }
 
     public String getPublicUrl(String folder, String fileName) {
         if (fileName == null) return null;

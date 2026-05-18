@@ -21,6 +21,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.utils.PartialUpdateUtils;
 import com.example.demo.utils.SecurityUtils;
 import com.example.demo.exceptions.UnauthorizedException;
@@ -93,10 +95,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void lockPayments(UUID userId, LocalDateTime lockedUntil) {
         UserEntity user = userRepository.findById(userId).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + userId + " not found")
         );
+        user.setIsActive(false);
         user.setPaymentLockedUntil(lockedUntil);
         userRepository.save(user);
     }

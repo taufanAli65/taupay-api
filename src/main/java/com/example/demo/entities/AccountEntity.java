@@ -16,7 +16,7 @@ public class AccountEntity extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(length = 6)
+    @Column(length = 255)
     private String pin;
 
     @Column(nullable = false)
