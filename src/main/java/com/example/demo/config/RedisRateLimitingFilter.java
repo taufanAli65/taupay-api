@@ -74,12 +74,12 @@ public class RedisRateLimitingFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        if (!path.startsWith(apiPrefix)) {
+        if (path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.equals("/swagger-ui.html")) {
             return true;
         }
-        return path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-ui")
-                || path.equals("/swagger-ui.html");
+        return !path.startsWith(apiPrefix);
     }
 
     private String buildRateLimitKey(HttpServletRequest request) {
