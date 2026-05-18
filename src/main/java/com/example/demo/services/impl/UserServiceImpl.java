@@ -100,7 +100,6 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(userId).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + userId + " not found")
         );
-        user.setIsActive(false);
         user.setPaymentLockedUntil(lockedUntil);
         userRepository.save(user);
     }
