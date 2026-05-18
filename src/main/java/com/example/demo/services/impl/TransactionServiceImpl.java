@@ -120,7 +120,13 @@ public class TransactionServiceImpl implements TransactionService {
 
         // Schedule an "expired" event to be sent when the TTL is reached
         CompletableFuture.runAsync(() -> {
-            notifySseExpired(trxId);
+            try {
+                // Double-check cache: If it's already gone (PAID and evicted), don't send EXPIRED
+                transactionCacheService.get(trxId);
+                notifySseExpired(trxId);
+            } catch (DataNotFoundException e) {
+                log.debug("Transaction {} already paid or handled, skipping expiration broadcast.", trxId);
+            }
         }, CompletableFuture.delayedExecutor(transactionTtl.toMillis(), TimeUnit.MILLISECONDS));
 
         return payload;
@@ -133,7 +139,17 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         // Add 5 seconds to the TTL so the SSE connection doesn't timeout before receiving the expired event
-        return eventStreamService.subscribe(trxId, transactionTtl.toMillis() + 5000L);
+        SseEmitter emitter = eventStreamService.subscribe(trxId, transactionTtl.toMillis() + 5000L);
+
+        // Immediate check: If transaction is already gone from cache (expired or paid), 
+        // notify the client immediately so they don't wait in silence.
+        try {
+            transactionCacheService.get(trxId);
+        } catch (DataNotFoundException e) {
+            notifySseExpired(trxId);
+        }
+
+        return emitter;
     }
 
     @Override
