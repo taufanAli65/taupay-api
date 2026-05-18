@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "mst_users")
@@ -32,4 +33,7 @@ public class UserEntity extends BaseEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "payment_locked_until")
+    private LocalDateTime paymentLockedUntil;
 }

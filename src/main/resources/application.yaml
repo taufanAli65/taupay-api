@@ -43,6 +43,13 @@ app:
     merchant-category-ttl: 1h
   transaction:
     ttl: 5m
+  rate-limit:
+    enabled: true
+    api-prefix: /api/v1
+    capacity: 15
+    window: 1m
+  payment-lock:
+    duration: 15m
 
 minio:
   endpoint: http://localhost:9000

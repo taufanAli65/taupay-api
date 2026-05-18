@@ -15,4 +15,5 @@ public interface UserService {
     Page<ResUserDto> findAllUsers(ReqUserFilterDto filterDto);
     void toggleUserStatus(UUID user_id, boolean isActive);
     ResCommonStatisticsDto getAdminUserStatistics();
+    void lockPayments(UUID userId, java.time.LocalDateTime lockedUntil);
 }

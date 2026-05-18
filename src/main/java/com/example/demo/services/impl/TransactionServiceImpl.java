@@ -14,13 +14,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.example.demo.dtos.requests.ReqPaymentCallbackDto;
 import com.example.demo.dtos.requests.ReqTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionHistoryDto;
+import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.AccountProductTransactionEntity;
 import com.example.demo.entities.AccountTransactionEntity;
 import com.example.demo.entities.MerchantEntity;
@@ -28,6 +31,7 @@ import com.example.demo.entities.OwnerTypeEnum;
 import com.example.demo.entities.ProductEntity;
 import com.example.demo.entities.ProductTransactionEntity;
 import com.example.demo.entities.UserEntity;
+import com.example.demo.exceptions.AccountLockedException;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.TransactionMapper;
@@ -40,8 +44,10 @@ import com.example.demo.repositories.ProductTransactionHistoryRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.repositories.WalletRepository;
 import com.example.demo.services.EventStreamService;
+import com.example.demo.services.PinAttemptService;
 import com.example.demo.services.TransactionCacheService;
 import com.example.demo.services.TransactionService;
+import com.example.demo.services.UserService;
 import com.example.demo.utils.TransactionUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -62,9 +68,15 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionCacheService transactionCacheService;
     private final EventStreamService eventStreamService;
     private final ProductQuantityRepository productQuantityRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final PinAttemptService pinAttemptService;
+    private final UserService userService;
 
     @Value("${app.transaction.ttl:5m}")
     private java.time.Duration transactionTtl;
+
+    @Value("${app.payment-lock.duration:15m}")
+    private java.time.Duration paymentLockDuration;
 
     @Override
     public ResTransactionDto createTransaction(ReqTransactionDto request, UUID merchant_id) {
@@ -126,7 +138,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public void handlePaymentCallback(String trxId, UUID userId) {
+    public void handlePaymentCallback(String trxId, UUID userId, ReqPaymentCallbackDto request) {
         if (userId == null) {
             throw new BadRequestException("User ID is required");
         }
@@ -143,6 +155,23 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
         UserEntity payer = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
+        AccountEntity payerAccount = payer.getAccount();
+        if (payerAccount == null) {
+            throw new DataNotFoundException("Account for user not found");
+        }
+        if (payerAccount.getPin() == null || payerAccount.getPin().isBlank()) {
+            throw new BadRequestException("PIN is not set for this account");
+        }
+        if (!passwordEncoder.matches(request.getPin(), payerAccount.getPin())) {
+            long attempts = pinAttemptService.recordFailedAttempt(userId, trxId);
+            if (attempts >= 3) {
+                userService.lockPayments(userId, LocalDateTime.now().plus(paymentLockDuration));
+                pinAttemptService.clearAttempts(userId, trxId);
+                throw new AccountLockedException("Too many incorrect PIN attempts. User account is locked for payments for 15 minutes");
+            }
+            throw new BadRequestException("Invalid PIN");
+        }
+        pinAttemptService.clearAttempts(userId, trxId);
 
         Long amount = payload.getTotal();
 

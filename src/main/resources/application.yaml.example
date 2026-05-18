@@ -32,6 +32,8 @@ app:
     api-prefix: /api/v1
     capacity: 15
     window: 1m
+  payment-lock:
+    duration: 15m
 
 jwt:
   secret: your_secret_key

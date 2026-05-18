@@ -22,6 +22,7 @@ import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.UserRepository;
 import com.example.demo.services.AuthService;
+import com.example.demo.services.AccountAccessService;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.WalletService;
 import com.example.demo.utils.JwtUtil;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final MerchantMapper merchantMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final AccountAccessService accountAccessService;
 
     @Override
     public ResLoginDto login(ReqLoginDto request) {
@@ -53,10 +55,15 @@ public class AuthServiceImpl implements AuthService {
             throw new BadRequestException("Email and password doesn't match");
         }
 
+        accountAccessService.assertCanLogin(account);
+
         if (account.getRole() == RoleEnum.USER) {
             UserEntity user = account.getUser();
             if (user == null) {
                 throw new DataNotFoundException("User profile not found");
+            }
+            if (!Boolean.TRUE.equals(user.getIsActive())) {
+                throw new UnauthorizedException("User account is inactive");
             }
             String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), user.getId());
             return accountMapper.toLoginResponse(account, user, token);
@@ -66,9 +73,6 @@ public class AuthServiceImpl implements AuthService {
             MerchantEntity merchant = account.getMerchant();
             if (merchant == null) {
                 throw new DataNotFoundException("Merchant profile not found");
-            }
-            if (!Boolean.TRUE.equals(merchant.getIsActive())) {
-                throw new UnauthorizedException("Merchant account is inactive");
             }
             String token = jwtUtil.generateToken(account.getEmail(), account.getRole().name(), merchant.getId());
             return accountMapper.toLoginResponse(merchant, token);
