@@ -10,10 +10,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.example.demo.dtos.requests.ReqPaginationDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -272,7 +274,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Page<ResTransactionHistoryDto> getTransactionHistory(
-            UUID profileId, LocalDate startDate, LocalDate endDate, int page, int size, boolean isMerchant
+            UUID profileId, LocalDate startDate, LocalDate endDate, ReqPaginationDto paginationDto, boolean isMerchant
     ) {
         
         LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.now().minusDays(30);
@@ -282,7 +284,15 @@ public class TransactionServiceImpl implements TransactionService {
             throw new BadRequestException("startDate must be before or equal to endDate");
         }
         
-        Pageable pageable = PageRequest.of(page, size);
+        int size = paginationDto.getSize() != null ? paginationDto.getSize() : 10;
+        int page = paginationDto.getPage() != null ? paginationDto.getPage() : 0;
+
+        String sortBy = (paginationDto.getSortBy() != null && !paginationDto.getSortBy().isBlank()) 
+                ? paginationDto.getSortBy() : "createdAt";
+        Sort.Direction direction = (paginationDto.getSortDir() != null && paginationDto.getSortDir().equalsIgnoreCase("ASC")) 
+                ? Sort.Direction.ASC : Sort.Direction.DESC;
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         Page<AccountTransactionEntity> transactionPage;
 
         if (isMerchant) {

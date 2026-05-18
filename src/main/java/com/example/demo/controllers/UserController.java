@@ -78,10 +78,7 @@ public class UserController {
             @ParameterObject @Valid ReqPaginationDto paginationDto
     ) {
         UUID userId = SecurityUtils.getCurrentProfileId();
-        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
-        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
-        
-        Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(userId, startDate, endDate, page, size, false);
+        Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(userId, startDate, endDate, paginationDto, false);
         ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber(), history.getTotalElements(), history.getTotalPages());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
     }

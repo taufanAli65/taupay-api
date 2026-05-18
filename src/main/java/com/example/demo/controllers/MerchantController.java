@@ -84,10 +84,7 @@ public class MerchantController {
             @ParameterObject @Valid ReqPaginationDto paginationDto
     ) {
         UUID merchantId = SecurityUtils.getCurrentProfileId();
-        int size = paginationDto.getSize() == null ? 10 : paginationDto.getSize();
-        int page = paginationDto.getPage() == null ? 0 : paginationDto.getPage();
-
-        Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(merchantId, startDate, endDate, page, size, true);
+        Page<ResTransactionHistoryDto> history = transactionService.getTransactionHistory(merchantId, startDate, endDate, paginationDto, true);
         ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber(), history.getTotalElements(), history.getTotalPages());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
     }
