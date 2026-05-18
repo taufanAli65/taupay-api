@@ -48,8 +48,9 @@ app:
     api-prefix: /api/v1
     capacity: 15
     window: 1m
+    keep-after-refill: 10s
   payment-lock:
-    duration: 15m
+    duration: 1h
 
 minio:
   endpoint: http://localhost:9000

@@ -35,8 +35,11 @@ public class AccountAccessServiceImpl implements AccountAccessService {
             if (user == null) {
                 return;
             }
-            assertActive(user.getIsActive(), "User account is inactive");
             clearExpiredUserLock(user);
+            if (isStillLocked(user.getPaymentLockedUntil())) {
+                throw new AccountLockedException("User account is temporarily locked until " + user.getPaymentLockedUntil());
+            }
+            assertActive(user.getIsActive(), "User account is inactive");
             return;
         }
 
@@ -45,8 +48,11 @@ public class AccountAccessServiceImpl implements AccountAccessService {
             if (merchant == null) {
                 return;
             }
-            assertActive(merchant.getIsActive(), "Merchant account is inactive");
             clearExpiredMerchantLock(merchant);
+            if (isStillLocked(merchant.getPaymentLockedUntil())) {
+                throw new AccountLockedException("Merchant account is temporarily locked until " + merchant.getPaymentLockedUntil());
+            }
+            assertActive(merchant.getIsActive(), "Merchant account is inactive");
         }
     }
 
@@ -62,11 +68,11 @@ public class AccountAccessServiceImpl implements AccountAccessService {
             if (user == null) {
                 return;
             }
-            assertActive(user.getIsActive(), "User account is inactive");
+            clearExpiredUserLock(user);
             if (isStillLocked(user.getPaymentLockedUntil())) {
                 throw new AccountLockedException("User account is temporarily locked for payments until " + user.getPaymentLockedUntil());
             }
-            clearExpiredUserLock(user);
+            assertActive(user.getIsActive(), "User account is inactive");
             return;
         }
 
@@ -75,11 +81,11 @@ public class AccountAccessServiceImpl implements AccountAccessService {
             if (merchant == null) {
                 return;
             }
-            assertActive(merchant.getIsActive(), "Merchant account is inactive");
+            clearExpiredMerchantLock(merchant);
             if (isStillLocked(merchant.getPaymentLockedUntil())) {
                 throw new AccountLockedException("Merchant account is temporarily locked for payments until " + merchant.getPaymentLockedUntil());
             }
-            clearExpiredMerchantLock(merchant);
+            assertActive(merchant.getIsActive(), "Merchant account is inactive");
         }
     }
 
@@ -96,6 +102,9 @@ public class AccountAccessServiceImpl implements AccountAccessService {
     private void clearExpiredUserLock(UserEntity user) {
         if (user.getPaymentLockedUntil() != null && !isStillLocked(user.getPaymentLockedUntil())) {
             user.setPaymentLockedUntil(null);
+            if (!Boolean.TRUE.equals(user.getIsActive())) {
+                user.setIsActive(true);
+            }
             userRepository.save(user);
         }
     }
@@ -103,6 +112,9 @@ public class AccountAccessServiceImpl implements AccountAccessService {
     private void clearExpiredMerchantLock(MerchantEntity merchant) {
         if (merchant.getPaymentLockedUntil() != null && !isStillLocked(merchant.getPaymentLockedUntil())) {
             merchant.setPaymentLockedUntil(null);
+            if (!Boolean.TRUE.equals(merchant.getIsActive())) {
+                merchant.setIsActive(true);
+            }
             merchantRepository.save(merchant);
         }
     }

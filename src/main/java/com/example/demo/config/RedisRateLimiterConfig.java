@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy;
+import io.github.bucket4j.distributed.proxy.ClientSideConfig;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager;
 import io.lettuce.core.RedisClient;
@@ -26,6 +28,9 @@ public class RedisRateLimiterConfig {
 
     @Value("${app.rate-limit.window:1m}")
     private Duration window;
+
+    @Value("${app.rate-limit.keep-after-refill:10s}")
+    private Duration keepAfterRefill;
 
     @Bean
     public RedisClient redisClient(RedisProperties redisProperties) {
@@ -53,6 +58,10 @@ public class RedisRateLimiterConfig {
     @Bean
     public ProxyManager<String> lettuceBasedProxyManager(StatefulRedisConnection<String, byte[]> redisConnection) {
         return LettuceBasedProxyManager.builderFor(redisConnection)
+            .withClientSideConfig(ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(
+                    ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(keepAfterRefill)
+                ))
                 .build();
     }
 

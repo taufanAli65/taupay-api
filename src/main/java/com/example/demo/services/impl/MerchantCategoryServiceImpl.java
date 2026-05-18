@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +34,10 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
 
     @Override
     @Transactional
-    @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#result.id")
+        @Caching(
+            put = @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#result.id"),
+            evict = @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, allEntries = true)
+        )
     public ResMerchantCategoryDto createMerchantCategory(ReqMerchantCategoryDto req) {
         MerchantCategoryEntity merchantCategory = new MerchantCategoryEntity();
         merchantCategory.setName(req.getName());
@@ -52,7 +56,12 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id")
+        @Caching(
+            evict = {
+                @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id"),
+                @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, allEntries = true)
+            }
+        )
     public void deleteMerchantCategory(UUID id) {
         if (!merchantCategoryRepository.existsById(id)) {
             throw new DataNotFoundException("Merchant Category with ID: " + id + " not found");
@@ -67,7 +76,10 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
 
     @Override
     @Transactional
-    @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id")
+        @Caching(
+            put = @CachePut(cacheNames = CacheNames.MERCHANT_CATEGORY_BY_ID, key = "#id"),
+            evict = @CacheEvict(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, allEntries = true)
+        )
     public ResMerchantCategoryDto updateMerchantCategoryName(UUID id, ReqMerchantCategoryDto req) {
         MerchantCategoryEntity merchantCategory = merchantCategoryRepository.findById(id).orElseThrow(
                 () -> new DataNotFoundException("Merchant Category with ID: " + id + " not found")
@@ -78,6 +90,7 @@ public class MerchantCategoryServiceImpl implements MerchantCategoryService {
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.MERCHANT_CATEGORY_LIST, key = "'all'", condition = "#search == null || #search.isBlank()")
     public List<ResMerchantCategoryDto> getAllMerchantCategories(String search) {
         List<MerchantCategoryEntity> categories;
         if (search != null && !search.isBlank()) {

@@ -158,7 +158,7 @@ public class TransactionServiceImpl implements TransactionService {
             if (attempts >= 3) {
                 userService.lockPayments(userId, LocalDateTime.now().plus(paymentLockDuration));
                 pinAttemptService.clearAttempts(userId, trxId);
-                throw new AccountLockedException("Too many incorrect PIN attempts. User account is locked for payments for 15 minutes");
+                throw new AccountLockedException("Too many incorrect PIN attempts. User account is locked for payments temporarily.");
             }
             throw new BadRequestException("Invalid PIN");
         }

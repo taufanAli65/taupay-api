@@ -20,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AccountStatusFilter accountStatusFilter;
     private final PaymentAccessFilter paymentAccessFilter;
     private final RedisRateLimitingFilter redisRateLimitingFilter;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
@@ -50,6 +51,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(accountStatusFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(paymentAccessFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(redisRateLimitingFilter, JwtAuthenticationFilter.class);
         return http.build();
