@@ -8,8 +8,6 @@ import com.example.demo.dtos.responses.ResTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionHistoryDto;
 import org.springframework.data.domain.Page;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.time.LocalDate;
 import java.util.UUID;
 
 public interface TransactionService {
