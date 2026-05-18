@@ -47,6 +47,18 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{trxId}")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Get transaction details", description = "Retrieves pending transaction details by ID before payment.")
+    public ResponseEntity<BaseResponse<ResTransactionDto>> getTransactionDetails(
+            @PathVariable String trxId
+    ) {
+        ResTransactionDto transaction = transactionService.getTransactionDetails(trxId);
+        BaseResponse<ResTransactionDto> response = BaseResponse.success("Transaction Details Retrieved Successfully", transaction);
+        return ResponseEntity.ok(response);
+    }
+
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/{trxId}/callback")
     @Operation(summary = "Payment callback", description = "Receives payment gateway callback for a transaction.")
