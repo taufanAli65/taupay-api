@@ -102,9 +102,6 @@ public class AccountAccessServiceImpl implements AccountAccessService {
     private void clearExpiredUserLock(UserEntity user) {
         if (user.getPaymentLockedUntil() != null && !isStillLocked(user.getPaymentLockedUntil())) {
             user.setPaymentLockedUntil(null);
-            if (!Boolean.TRUE.equals(user.getIsActive())) {
-                user.setIsActive(true);
-            }
             userRepository.save(user);
         }
     }
@@ -112,9 +109,6 @@ public class AccountAccessServiceImpl implements AccountAccessService {
     private void clearExpiredMerchantLock(MerchantEntity merchant) {
         if (merchant.getPaymentLockedUntil() != null && !isStillLocked(merchant.getPaymentLockedUntil())) {
             merchant.setPaymentLockedUntil(null);
-            if (!Boolean.TRUE.equals(merchant.getIsActive())) {
-                merchant.setIsActive(true);
-            }
             merchantRepository.save(merchant);
         }
     }
