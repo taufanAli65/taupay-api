@@ -3,6 +3,7 @@ package com.example.demo.services;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.example.demo.dtos.requests.ReqPaymentCallbackDto;
 import com.example.demo.dtos.requests.ReqTransactionDto;
 import com.example.demo.dtos.responses.ResTransactionDto;
 
@@ -15,7 +16,7 @@ public interface TransactionService {
 
     SseEmitter subscribeToTransactionEvents(String trxId);
 
-    void handlePaymentCallback(String trxId, UUID userId);
+    void handlePaymentCallback(String trxId, UUID userId, ReqPaymentCallbackDto request);
 
     Page<ResTransactionHistoryDto> getTransactionHistory(UUID profileId, LocalDate startDate, LocalDate endDate, int page, int size, boolean isMerchant);
 }

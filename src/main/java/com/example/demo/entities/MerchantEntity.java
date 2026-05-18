@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "mst_merchants")
 @Setter
@@ -28,4 +30,7 @@ public class MerchantEntity extends BaseEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "payment_locked_until")
+    private LocalDateTime paymentLockedUntil;
 }

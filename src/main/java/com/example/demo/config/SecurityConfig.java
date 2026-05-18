@@ -20,6 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AccountAccessFilter accountAccessFilter;
+    private final RedisRateLimitingFilter redisRateLimitingFilter;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
@@ -40,15 +42,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                    .requestMatchers("/api/v1/transactions/callback").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/v1/merchant/category/**").permitAll()
                         .requestMatchers("/api/v1/merchant/**").hasRole("MERCHANT")
-                    .requestMatchers("/api/v1/transactions/**").authenticated()
+                        .requestMatchers("/api/v1/transactions/**").authenticated()
                         .requestMatchers("/api/v1/user/**").authenticated()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(accountAccessFilter, JwtAuthenticationFilter.class)
+                .addFilterAfter(redisRateLimitingFilter, JwtAuthenticationFilter.class);
         return http.build();
     }
 }

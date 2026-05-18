@@ -13,9 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.http.MediaType;
 
+import com.example.demo.dtos.requests.ReqPaymentCallbackDto;
 import com.example.demo.dtos.requests.ReqTransactionDto;
 import com.example.demo.dtos.responses.BaseResponse;
 import com.example.demo.dtos.responses.ResTransactionDto;
+import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.services.TransactionService;
 import com.example.demo.utils.SecurityUtils;
 
@@ -49,11 +51,14 @@ public class TransactionController {
     @PostMapping("/{trxId}/callback")
     @Operation(summary = "Payment callback", description = "Receives payment gateway callback for a transaction.")
     public ResponseEntity<BaseResponse<Void>> paymentCallback(
-            @PathVariable String trxId
+            @PathVariable String trxId,
+            @Valid @RequestBody ReqPaymentCallbackDto request
     ) {
+        if (!trxId.equals(request.getTrxId())) {
+            throw new BadRequestException("trx_id in request body must match the URL path");
+        }
         UUID userId = SecurityUtils.getCurrentProfileId();
-        System.out.println("Payment callback received for trxId: " + trxId + ", userId: " + userId);
-        transactionService.handlePaymentCallback(trxId, userId);
+        transactionService.handlePaymentCallback(trxId, userId, request);
         BaseResponse<Void> response = BaseResponse.success("Payment Callback Processed", null);
         return ResponseEntity.ok(response);
     }

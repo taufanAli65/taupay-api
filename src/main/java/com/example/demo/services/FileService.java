@@ -1,17 +1,14 @@
 package com.example.demo.services;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
-import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,21 +35,6 @@ public class FileService {
                 .build()
         );
         return fileName;
-    }
-    
-    public String getFileUrl(String folder, String fileName) {
-        try {
-            return minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET)
-                    .bucket(bucketName)
-                    .object(folder + "/" + fileName)
-                    .expiry(1, TimeUnit.HOURS)
-                    .build()
-            );
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate presigned URL");
-        }
     }
 
     public String getPublicUrl(String folder, String fileName) {
