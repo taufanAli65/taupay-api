@@ -66,10 +66,10 @@ public class UserServiceImpl implements UserService {
     public Page<ResUserDto> findAllUsers(ReqUserFilterDto filterDto) {
         int size = filterDto.getSize() != null ? filterDto.getSize() : 10;
         int page = filterDto.getPage() != null ? filterDto.getPage() : 0;
-        
+
         PageRequest pageRequest;
         if (filterDto.getSortBy() != null && !filterDto.getSortBy().isBlank()) {
-            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC")) 
+            Sort.Direction direction = (filterDto.getSortDir() != null && filterDto.getSortDir().equalsIgnoreCase("ASC"))
                     ? Sort.Direction.ASC : Sort.Direction.DESC;
             pageRequest = PageRequest.of(page, size, Sort.by(direction, filterDto.getSortBy()));
         } else {

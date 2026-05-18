@@ -7,6 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -115,6 +117,18 @@ public class TransactionServiceImpl implements TransactionService {
 
         ResTransactionDto payload = transactionMapper.toResponse(trxId, merchant, createdAt, productItems, total);
         transactionCacheService.save(trxId, payload);
+
+        // Schedule an "expired" event to be sent when the TTL is reached
+        CompletableFuture.runAsync(() -> {
+            try {
+                // Double-check cache: If it's already gone (PAID and evicted), don't send EXPIRED
+                transactionCacheService.get(trxId);
+                notifySseExpired(trxId);
+            } catch (DataNotFoundException e) {
+                log.debug("Transaction {} already paid or handled, skipping expiration broadcast.", trxId);
+            }
+        }, CompletableFuture.delayedExecutor(transactionTtl.toMillis(), TimeUnit.MILLISECONDS));
+
         return payload;
     }
 
@@ -124,7 +138,18 @@ public class TransactionServiceImpl implements TransactionService {
             throw new BadRequestException("trx_id is required");
         }
 
-        return eventStreamService.subscribe(trxId, transactionTtl.toMillis());
+        // Add 5 seconds to the TTL so the SSE connection doesn't timeout before receiving the expired event
+        SseEmitter emitter = eventStreamService.subscribe(trxId, transactionTtl.toMillis() + 5000L);
+
+        // Immediate check: If transaction is already gone from cache (expired or paid), 
+        // notify the client immediately so they don't wait in silence.
+        try {
+            transactionCacheService.get(trxId);
+        } catch (DataNotFoundException e) {
+            notifySseExpired(trxId);
+        }
+
+        return emitter;
     }
 
     @Override
@@ -268,6 +293,15 @@ public class TransactionServiceImpl implements TransactionService {
                 "total", total
         );
         eventStreamService.publish(trxId, "payment", payload);
+    }
+
+    private void notifySseExpired(String trxId) {
+        Map<String, Object> payload = Map.of(
+                "trx_id", trxId,
+                "status", "EXPIRED",
+                "message", "Transaction has expired due to timeout"
+        );
+        eventStreamService.publish(trxId, "expired", payload);
     }
 
     private String generateTransactionId() {
