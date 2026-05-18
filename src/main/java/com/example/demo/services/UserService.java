@@ -13,4 +13,5 @@ public interface UserService {
     void updateUserById(ReqUserUpdateDto request, UUID user_id);
     Page<ResUserDto> findAllUsers(ReqUserFilterDto filterDto);
     void toggleUserStatus(UUID user_id, boolean isActive);
+    void lockPayments(UUID userId, java.time.LocalDateTime lockedUntil);
 }

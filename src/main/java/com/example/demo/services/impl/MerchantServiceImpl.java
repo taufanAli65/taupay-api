@@ -27,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -97,6 +98,13 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setName(request.getName());
         merchant.setAddress(request.getAddress());
         merchant.setCategory(category);
+        if (request.getPin() != null) {
+            AccountEntity account = merchant.getAccount();
+            if (account == null) {
+                throw new DataNotFoundException("Account for merchant with ID: " + merchantId + " not found");
+            }
+            account.setPin(passwordEncoder.encode(request.getPin()));
+        }
 
         return merchantMapper.toResponse(merchantRepository.save(merchant));
     }
@@ -109,6 +117,15 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setIsActive(request.getIsActive());
         return merchantMapper.toResponse(merchantRepository.save(merchant));
         // TODO: INVALIDATE MERCHANT SESSION UNTILL ADMIN RE-ACTIVATE THE MERCHANT ACCOUNT OR TTL FOR DEACTIVATION
+    }
+
+    @Override
+    @Transactional
+    public void lockPayments(UUID merchantId, LocalDateTime lockedUntil) {
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
+        merchant.setPaymentLockedUntil(lockedUntil);
+        merchantRepository.save(merchant);
     }
 
     private MerchantCategoryEntity findCategoryById(UUID categoryId) {

@@ -3,6 +3,7 @@ package com.example.demo.services.impl;
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.ResUserDto;
+import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.UserMapper;
@@ -16,11 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.demo.utils.PartialUpdateUtils;
 import com.example.demo.utils.SecurityUtils;
 import com.example.demo.exceptions.UnauthorizedException;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -29,6 +32,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public ResUserDto getUserById(UUID user_id) {
@@ -42,7 +46,15 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(user_id).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + user_id + " not found")
         );
+        String pin = request.getPin();
         PartialUpdateUtils.copyNonNullProperties(request, user);
+        if (pin != null) {
+            AccountEntity account = user.getAccount();
+            if (account == null) {
+                throw new DataNotFoundException("Account for user with ID: " + user_id + " not found");
+            }
+            account.setPin(passwordEncoder.encode(pin));
+        }
         userRepository.save(user);
     }
 
@@ -68,5 +80,14 @@ public class UserServiceImpl implements UserService {
         } else {
             throw new UnauthorizedException("Only SUPER_ADMIN can toggle user status"); 
         } // TODO: INVALIDATE USER SESSION UNTILL ADMIN RE-ACTIVATE THE USER ACCOUNT OR TTL FOR DEACTIVATION
+    }
+
+    @Override
+    public void lockPayments(UUID userId, LocalDateTime lockedUntil) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(
+                () -> new DataNotFoundException("User with ID: " + userId + " not found")
+        );
+        user.setPaymentLockedUntil(lockedUntil);
+        userRepository.save(user);
     }
 }

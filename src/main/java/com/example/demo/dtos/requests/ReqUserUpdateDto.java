@@ -1,6 +1,7 @@
 package com.example.demo.dtos.requests;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,4 +24,8 @@ public class ReqUserUpdateDto {
 
     @Schema(description = "Updated birth date.", example = "1998-04-12", type = "string", format = "date")
     private LocalDate birthDate;
+
+    @Pattern(regexp = "^\\d{6}$", message = "PIN must be exactly 6 digits")
+    @Schema(description = "Updated 6-digit PIN.", example = "123456")
+    private String pin;
 }
