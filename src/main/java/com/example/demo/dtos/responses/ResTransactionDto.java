@@ -29,6 +29,9 @@ public class ResTransactionDto {
     @Schema(description = "Total transaction amount", example = "65000")
     private Long total;
 
+    @Schema(description = "Current transaction status", example = "PENDING")
+    private String status = "PENDING";
+
     @Data
     @Schema(name = "ResTransactionProductItem", description = "Details of a product in the transaction.")
     public static class ProductItem {

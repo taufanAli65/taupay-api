@@ -5,10 +5,12 @@ import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.ResCommonStatisticsDto;
 import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.AccountEntity;
+import com.example.demo.entities.OwnerTypeEnum;
 import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.UserRepository;
+import com.example.demo.repositories.WalletRepository;
 import com.example.demo.repositories.specs.UserSpecification;
 import com.example.demo.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -37,12 +39,19 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final WalletRepository walletRepository;
 
     @Override
     public ResUserDto getUserById(UUID user_id) {
-        return userRepository.findUserById(user_id).orElseThrow(
+        ResUserDto userDto = userRepository.findUserById(user_id).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + user_id + " not found")
         );
+
+        // Fetch balance
+        walletRepository.findByOwnerIdAndOwnerType(user_id, OwnerTypeEnum.USER)
+                .ifPresent(wallet -> userDto.setBalance(wallet.getAmount()));
+
+        return userDto;
     }
 
     @Override

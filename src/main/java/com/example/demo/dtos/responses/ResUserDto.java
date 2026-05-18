@@ -33,4 +33,17 @@ public class ResUserDto {
 
     @Schema(description = "Whether the user account is active.", example = "true")
     private Boolean isActive;
+
+    @Schema(description = "User wallet balance.", example = "50000")
+    private Long balance;
+
+    public ResUserDto(UUID id, String firstName, String lastName, String email, String address, LocalDate birthDate, Boolean isActive) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.address = address;
+        this.birthDate = birthDate;
+        this.isActive = isActive;
+    }
 }

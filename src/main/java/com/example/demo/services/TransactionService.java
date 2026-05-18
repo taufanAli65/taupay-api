@@ -12,7 +12,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface TransactionService {
-    ResTransactionDto createTransaction(ReqTransactionDto request, UUID merchantId);
+    ResTransactionDto createTransaction(ReqTransactionDto request, UUID merchant_id);
+
+    ResTransactionDto getTransactionDetails(String trxId);
 
     SseEmitter subscribeToTransactionEvents(String trxId);
 

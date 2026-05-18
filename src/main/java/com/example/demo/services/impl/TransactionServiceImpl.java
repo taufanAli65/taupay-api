@@ -133,6 +133,14 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public ResTransactionDto getTransactionDetails(String trxId) {
+        if (trxId == null || trxId.isBlank()) {
+            throw new BadRequestException("trx_id is required");
+        }
+        return transactionCacheService.get(trxId);
+    }
+
+    @Override
     public SseEmitter subscribeToTransactionEvents(String trxId) {
         if (trxId == null || trxId.isBlank()) {
             throw new BadRequestException("trx_id is required");
