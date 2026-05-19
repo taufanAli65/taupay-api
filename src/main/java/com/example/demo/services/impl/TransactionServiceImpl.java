@@ -3,12 +3,13 @@ package com.example.demo.services.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import com.example.demo.dtos.requests.ReqPaginationDto;
 import org.springframework.beans.factory.annotation.Value;
@@ -181,6 +182,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
         UserEntity payer = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
+        
         AccountEntity payerAccount = payer.getAccount();
         if (payerAccount == null) {
             throw new DataNotFoundException("Account for user not found");
@@ -188,6 +190,7 @@ public class TransactionServiceImpl implements TransactionService {
         if (payerAccount.getPin() == null || payerAccount.getPin().isBlank()) {
             throw new BadRequestException("PIN is not set for this account");
         }
+        
         if (!passwordEncoder.matches(request.getPin(), payerAccount.getPin())) {
             long attempts = pinAttemptService.recordFailedAttempt(userId, trxId);
             if (attempts >= 3) {
@@ -213,29 +216,36 @@ public class TransactionServiceImpl implements TransactionService {
         if (merchantWalletUpdated == 0) {
             throw new DataNotFoundException("Merchant wallet not found");
         }
+        
+        Map<UUID, Integer> requestedQuantitiesByProductId = payload.getProducts().stream()
+                .collect(Collectors.toMap(
+                        item -> TransactionUtils.parseUuid(item.getProductId(), "product_id"),
+                        ResTransactionDto.ProductItem::getQuantity,
+                        Integer::sum
+                ));
 
-        Map<UUID, Integer> requestedQuantitiesByProductId = new LinkedHashMap<>();
-        for (ResTransactionDto.ProductItem item : payload.getProducts()) {
-            UUID productId = TransactionUtils.parseUuid(item.getProductId(), "product_id");
-            requestedQuantitiesByProductId.merge(productId, item.getQuantity(), Integer::sum);
-        }
+        // Sort the Product IDs to prevent database deadlocks
+        List<UUID> sortedProductIds = requestedQuantitiesByProductId.keySet().stream()
+                .sorted()
+                .toList();
 
-        for (Map.Entry<UUID, Integer> entry : requestedQuantitiesByProductId.entrySet()) {
-            int stockUpdated = productQuantityRepository.decrementStockIfEnough(entry.getKey(), entry.getValue());
+        for (UUID productId : sortedProductIds) {
+            int quantity = requestedQuantitiesByProductId.get(productId);
+            int stockUpdated = productQuantityRepository.decrementStockIfEnough(productId, quantity);
+            
             if (stockUpdated == 0) {
-                if (!productQuantityRepository.existsByProductId(entry.getKey())) {
-                    throw new DataNotFoundException("Product quantity not found");
+                if (!productQuantityRepository.existsByProductId(productId)) {
+                    throw new DataNotFoundException("Product quantity not found for ID: " + productId);
                 }
-                throw new BadRequestException("Insufficient product stock");
+                throw new BadRequestException("Insufficient product stock for ID: " + productId);
             }
         }
 
-        Map<UUID, ProductEntity> productsById = new java.util.HashMap<>();
-        for (ProductEntity product : productRepository.findAllById(requestedQuantitiesByProductId.keySet())) {
-            productsById.put(product.getId(), product);
-        }
+        Map<UUID, ProductEntity> productsById = productRepository.findAllById(sortedProductIds).stream()
+                .collect(Collectors.toMap(ProductEntity::getId, Function.identity()));
+
         if (productsById.size() != requestedQuantitiesByProductId.size()) {
-            throw new DataNotFoundException("Product not found");
+            throw new DataNotFoundException("One or more products in the payload were not found");
         }
 
         String merchantCategory = merchant.getCategory() != null ? merchant.getCategory().getName() : "UNSPECIFIED";
@@ -252,16 +262,17 @@ public class TransactionServiceImpl implements TransactionService {
             UUID productId = TransactionUtils.parseUuid(item.getProductId(), "product_id");
             ProductEntity product = productsById.get(productId);
 
-                Long productPrice = item.getPrice();
-                ProductTransactionEntity productTransaction = transactionMapper.toProductTransaction(
-                    product,
-                    item,
-                    productPrice
-                );
+            Long productPrice = item.getPrice();
+            ProductTransactionEntity productTransaction = transactionMapper.toProductTransaction(
+                product,
+                item,
+                productPrice
+            );
             productTransactions.add(productTransaction);
         }
 
         List<ProductTransactionEntity> savedProductTransactions = productTransactionHistoryRepository.saveAll(productTransactions);
+        
         List<AccountProductTransactionEntity> links = new ArrayList<>();
         for (ProductTransactionEntity productTransaction : savedProductTransactions) {
             links.add(transactionMapper.toAccountProductTransaction(savedAccountTransaction, productTransaction));
@@ -271,7 +282,7 @@ public class TransactionServiceImpl implements TransactionService {
         notifySse(trxId, "PAID", payload.getTotal());
         transactionCacheService.evict(trxId);
     }
-
+    
     @Override
     public Page<ResTransactionHistoryDto> getTransactionHistory(
             UUID profileId, LocalDate startDate, LocalDate endDate, ReqPaginationDto paginationDto, boolean isMerchant
