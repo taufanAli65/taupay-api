@@ -88,4 +88,12 @@ public class MerchantController {
         ResPaginationDto pagination = new ResPaginationDto(history.getSize(), history.getNumber(), history.getTotalElements(), history.getTotalPages());
         return ResponseEntity.ok(BaseResponse.success("Transaction History Retrieved", history.getContent(), pagination));
     }
+
+    @GetMapping("/dashboard")
+    @Operation(summary = "Get merchant dashboard", description = "Returns aggregated dashboard data for the current merchant.")
+    public ResponseEntity<BaseResponse<com.example.demo.dtos.responses.ResMerchantDashboardDto>> getMerchantDashboard() {
+        UUID merchantId = SecurityUtils.getCurrentProfileId();
+        com.example.demo.dtos.responses.ResMerchantDashboardDto dto = merchantService.getMerchantDashboard(merchantId);
+        return ResponseEntity.ok(BaseResponse.success("Merchant Dashboard Retrieved", dto, null));
+    }
 }

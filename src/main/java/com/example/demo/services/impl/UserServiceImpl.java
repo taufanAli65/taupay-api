@@ -100,7 +100,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         } else {
             throw new UnauthorizedException("Only SUPER_ADMIN can toggle user status"); 
-        } // TODO: INVALIDATE USER SESSION UNTILL ADMIN RE-ACTIVATE THE USER ACCOUNT OR TTL FOR DEACTIVATION
+        }
     }
 
     @Override

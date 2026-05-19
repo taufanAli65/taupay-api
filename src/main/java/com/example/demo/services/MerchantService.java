@@ -5,6 +5,7 @@ import com.example.demo.dtos.requests.ReqMerchantFilterDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
 import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
 import com.example.demo.dtos.responses.ResCommonStatisticsDto;
+import com.example.demo.dtos.responses.ResMerchantDashboardDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import org.springframework.data.domain.Page;
 
@@ -25,4 +26,6 @@ public interface MerchantService {
     void lockPayments(UUID merchantId, LocalDateTime lockedUntil);
 
     ResCommonStatisticsDto getAdminMerchantStatistics();
+
+    ResMerchantDashboardDto getMerchantDashboard(UUID merchantId);
 }
