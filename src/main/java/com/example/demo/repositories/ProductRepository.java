@@ -50,4 +50,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
     long countByIsActiveTrue();
 
     long countByIsActiveFalse();
+
+    @EntityGraph(attributePaths = {"merchant.account", "merchant.category", "category", "quantityEntity"})
+    Page<ProductEntity> findAllByMerchantIdAndIsActiveTrueAndQuantityEntityStockLessThan(UUID merchantId, Integer threshold, Pageable pageable);
 }
