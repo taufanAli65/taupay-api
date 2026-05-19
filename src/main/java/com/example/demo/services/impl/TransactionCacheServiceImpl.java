@@ -44,11 +44,13 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
         String cacheKey = buildCacheKey(trxId);
         String json = stringRedisTemplate.opsForValue().get(cacheKey);
         if (json == null || json.isBlank()) {
-            log.warn("Transaction cache miss: trxId={}, cacheKey={}", trxId, cacheKey);
+            log.warn("[CACHE MISS] Transaction not found or expired: trxId={}, cacheKey={}", trxId, cacheKey);
             throw new DataNotFoundException("Transaction not found or expired");
         }
         try {
-            return objectMapper.readValue(json, ResTransactionDto.class);
+            ResTransactionDto payload = objectMapper.readValue(json, ResTransactionDto.class);
+            log.info("[CACHE HIT] Transaction data retrieved from Redis: trxId={}", trxId);
+            return payload;
         } catch (JsonProcessingException ex) {
             throw new BadRequestException("Failed to read transaction payload");
         }

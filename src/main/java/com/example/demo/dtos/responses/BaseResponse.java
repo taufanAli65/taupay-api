@@ -3,13 +3,12 @@ package com.example.demo.dtos.responses;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
-import java.util.UUID;
+import org.slf4j.MDC;
 
 @Data
 public class BaseResponse<T> {
     @Schema(description = "Unique request identifier.", example = "d290f1ee-6c54-4b01-90e6-d701748f0851")
-    private UUID reqId = UUID.randomUUID();
+    private String reqId;
 
     @Schema(description = "Request status. `T` indicates success and `F` indicates failure.", example = "T")
     private String status = "T";
@@ -23,6 +22,10 @@ public class BaseResponse<T> {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Schema(description = "Pagination metadata for list endpoints.")
     private ResPaginationDto pagination;
+
+    public BaseResponse() {
+        this.reqId = MDC.get("reqId");
+    }
 
     public static <T> BaseResponse<T> success(String message, T data) {
         BaseResponse<T> response = new BaseResponse<>();
