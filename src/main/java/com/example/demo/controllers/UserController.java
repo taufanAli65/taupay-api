@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dtos.requests.ReqChangePinDto;
 import com.example.demo.dtos.requests.ReqPaginationDto;
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
@@ -67,6 +68,18 @@ public class UserController {
         userService.updateUserById(user, userId);
         BaseResponse<Void> response = BaseResponse.success("User Information Updated Successfully", null, null);
         return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PatchMapping("/me/pin")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Change user PIN", description = "Updates the user PIN. Requires old PIN if already set.")
+    public ResponseEntity<BaseResponse<Void>> changePin(
+            @Valid @RequestBody ReqChangePinDto request
+    ) {
+        UUID userId = SecurityUtils.getCurrentProfileId();
+        userService.changePin(userId, request);
+        return ResponseEntity.ok(BaseResponse.success("PIN Updated Successfully", null));
     }
 
     @PreAuthorize("hasRole('USER')")

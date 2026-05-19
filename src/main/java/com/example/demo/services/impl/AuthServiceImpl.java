@@ -27,13 +27,17 @@ import com.example.demo.services.MerchantService;
 import com.example.demo.services.WalletService;
 import com.example.demo.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.concurrent.TimeUnit;
+
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final AccountRepository accountRepository;
@@ -45,6 +49,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AccountAccessService accountAccessService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public ResLoginDto login(ReqLoginDto request) {
@@ -86,6 +91,19 @@ public class AuthServiceImpl implements AuthService {
         }
 
         throw new UnauthorizedException("Unsupported account role");
+    }
+
+    @Override
+    public void logout(String token) {
+        long remainingTtl = jwtUtil.getRemainingExpirationTime(token);
+        if (remainingTtl > 0) {
+            stringRedisTemplate.opsForValue().set(
+                    "blacklist:" + token,
+                    "true",
+                    remainingTtl,
+                    TimeUnit.MILLISECONDS
+            );
+        }
     }
 
     @Override

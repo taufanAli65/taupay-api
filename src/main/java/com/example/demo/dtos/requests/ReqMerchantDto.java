@@ -22,8 +22,4 @@ public class ReqMerchantDto {
     @NotBlank(message = "Address is required")
     @Schema(description = "Merchant address.", example = "Jl. Sudirman No. 10, Jakarta")
     private String address;
-
-    @Pattern(regexp = "^\\d{6}$", message = "PIN must be exactly 6 digits")
-    @Schema(description = "Updated 6-digit PIN.", example = "123456")
-    private String pin;
 }

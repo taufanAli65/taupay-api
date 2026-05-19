@@ -54,6 +54,16 @@ public class JwtUtil {
         return parseClaims(token).get("profileId", String.class);
     }
 
+    public long getRemainingExpirationTime(String token) {
+        try {
+            Date expiration = parseClaims(token).getExpiration();
+            long diff = expiration.getTime() - System.currentTimeMillis();
+            return diff > 0 ? diff : 0;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public boolean isTokenValid(String token) {
         try {
             parseClaims(token);

@@ -1,5 +1,6 @@
 package com.example.demo.services.impl;
 
+import com.example.demo.dtos.requests.ReqChangePinDto;
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.ResCommonStatisticsDto;
@@ -7,6 +8,7 @@ import com.example.demo.dtos.responses.ResUserDto;
 import com.example.demo.entities.AccountEntity;
 import com.example.demo.entities.OwnerTypeEnum;
 import com.example.demo.entities.UserEntity;
+import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.UserRepository;
@@ -59,15 +61,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = userRepository.findById(user_id).orElseThrow(
                 () -> new DataNotFoundException("User with ID: " + user_id + " not found")
         );
-        String pin = request.getPin();
         PartialUpdateUtils.copyNonNullProperties(request, user);
-        if (pin != null) {
-            AccountEntity account = user.getAccount();
-            if (account == null) {
-                throw new DataNotFoundException("Account for user with ID: " + user_id + " not found");
-            }
-            account.setPin(passwordEncoder.encode(pin));
-        }
         userRepository.save(user);
     }
 
@@ -120,5 +114,29 @@ public class UserServiceImpl implements UserService {
                 .active(userRepository.countByIsActiveTrue())
                 .deactivated(userRepository.countByIsActiveFalse())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void changePin(UUID userId, ReqChangePinDto request) {
+        UserEntity user = userRepository.findById(userId).orElseThrow(
+                () -> new DataNotFoundException("User with ID: " + userId + " not found")
+        );
+        AccountEntity account = user.getAccount();
+        if (account == null) {
+            throw new DataNotFoundException("Account not found for user: " + userId);
+        }
+
+        if (account.getPin() != null && !account.getPin().isBlank()) {
+            if (request.getOldPin() == null || request.getOldPin().isBlank()) {
+                throw new BadRequestException("Current PIN is required to set a new one");
+            }
+            if (!passwordEncoder.matches(request.getOldPin(), account.getPin())) {
+                throw new BadRequestException("Current PIN is incorrect");
+            }
+        }
+
+        account.setPin(passwordEncoder.encode(request.getNewPin()));
+        userRepository.save(user);
     }
 }

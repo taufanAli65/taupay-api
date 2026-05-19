@@ -1,5 +1,6 @@
 package com.example.demo.services;
 
+import com.example.demo.dtos.requests.ReqChangePinDto;
 import com.example.demo.dtos.requests.ReqUserFilterDto;
 import com.example.demo.dtos.requests.ReqUserUpdateDto;
 import com.example.demo.dtos.responses.ResCommonStatisticsDto;
@@ -15,5 +16,6 @@ public interface UserService {
     Page<ResUserDto> findAllUsers(ReqUserFilterDto filterDto);
     void toggleUserStatus(UUID user_id, boolean isActive);
     ResCommonStatisticsDto getAdminUserStatistics();
+    void changePin(UUID userId, ReqChangePinDto request);
     void lockPayments(UUID userId, java.time.LocalDateTime lockedUntil);
 }
