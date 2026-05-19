@@ -20,6 +20,7 @@ import com.example.demo.entities.RoleEnum;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.DuplicateResourceException;
 import com.example.demo.mappers.MerchantMapper;
+import com.example.demo.mappers.MerchantDashboardMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -41,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +60,7 @@ public class MerchantServiceImpl implements MerchantService {
     private final WalletService walletService;
     private final PasswordEncoder passwordEncoder;
     private final MerchantMapper merchantMapper;
+    private final MerchantDashboardMapper merchantDashboardMapper;
     private final WalletRepository walletRepository;
 
     @Override
@@ -98,9 +99,9 @@ public class MerchantServiceImpl implements MerchantService {
         LocalDateTime todayStart = today.atStartOfDay();
         LocalDateTime todayEndExclusive = today.plusDays(1).atStartOfDay();
 
-            LocalDate yesterday = today.minusDays(1);
-            LocalDateTime yesterdayStart = yesterday.atStartOfDay();
-            LocalDateTime yesterdayEndExclusive = todayStart;
+        LocalDate yesterday = today.minusDays(1);
+        LocalDateTime yesterdayStart = yesterday.atStartOfDay();
+        LocalDateTime yesterdayEndExclusive = todayStart;
 
         LocalDateTime monthStart = LocalDate.now().withDayOfMonth(1).atStartOfDay();
         LocalDateTime sevenDaysAgo = LocalDate.now().minusDays(6).atStartOfDay();
@@ -118,24 +119,14 @@ public class MerchantServiceImpl implements MerchantService {
         Long averageOrderValue = todayOrders > 0 ? (todayRevenue / todayOrders) : 0L;
 
         Long activeProducts = productRepository.countByMerchantIdAndIsActiveTrue(merchantId);
-    Long totalProducts = productRepository.countByMerchantId(merchantId);
-    Long deactivatedProducts = productRepository.countByMerchantIdAndIsActiveFalse(merchantId);
+        Long totalProducts = productRepository.countByMerchantId(merchantId);
+        Long deactivatedProducts = productRepository.countByMerchantIdAndIsActiveFalse(merchantId);
 
         // Top products this month
-        List<ResTopProductDto> topProducts = new ArrayList<>();
         List<Object[]> tops = accountProductTransactionRepository.findTopProductsByMerchantInPeriod(merchantId, monthStart, java.time.LocalDateTime.now(), org.springframework.data.domain.PageRequest.of(0, 5));
-        if (tops != null) {
-            for (Object[] row : tops) {
-                ResTopProductDto dto = new ResTopProductDto();
-                dto.setProductName(row[0] != null ? row[0].toString() : null);
-                dto.setTotalQuantity(row[1] != null ? ((Number) row[1]).longValue() : 0L);
-                dto.setTotalRevenue(row[2] != null ? ((Number) row[2]).longValue() : 0L);
-                topProducts.add(dto);
-            }
-        }
+        List<ResTopProductDto> topProducts = merchantDashboardMapper.toTopProducts(tops);
 
         // Daily revenue for last 7 days
-        List<ResDailyRevenueDto> trend = new ArrayList<>();
         List<Object[]> daily = accountTransactionRepository.sumDailyByReceiverSince(merchantId, sevenDaysAgo);
         Map<String, Long> dailyMap = new HashMap<>();
         if (daily != null) {
@@ -146,38 +137,23 @@ public class MerchantServiceImpl implements MerchantService {
                 dailyMap.put(dateStr, sum);
             }
         }
-        for (int i = 0; i < 7; i++) {
-            LocalDate d = LocalDate.now().minusDays(6 - i);
-            String key = d.toString();
-            ResDailyRevenueDto p = new ResDailyRevenueDto();
-            p.setDate(key);
-            p.setRevenue(dailyMap.getOrDefault(key, 0L));
-            trend.add(p);
-        }
+        List<ResDailyRevenueDto> trend = merchantDashboardMapper.toDailyRevenueTrend(dailyMap, LocalDate.now().minusDays(6), 7);
 
         // Low stock products
         Page<ProductEntity> lowStockPage = productRepository.findAllByMerchantIdAndIsActiveTrueAndQuantityEntityStockLessThan(merchantId, 5, PageRequest.of(0, 10));
-        List<ResLowStockProductDto> lowStockProducts = new ArrayList<>();
-        if (lowStockPage != null) {
-            for (ProductEntity p : lowStockPage.getContent()) {
-                ResLowStockProductDto item = new ResLowStockProductDto();
-                item.setProductId(p.getId().toString());
-                item.setProductName(p.getName());
-                item.setStock(p.getQuantityEntity() != null ? p.getQuantityEntity().getStock() : 0);
-                lowStockProducts.add(item);
-            }
-        }
+        List<ResLowStockProductDto> lowStockProducts = merchantDashboardMapper.toLowStockProducts(lowStockPage != null ? lowStockPage.getContent() : null);
 
-        ResDashboardFinancialDto financial = new ResDashboardFinancialDto();
-        financial.setTodayRevenue(todayRevenue);
-        financial.setTodayOrders(todayOrders);
-        financial.setYesterdayRevenue(yesterdayRevenue);
-        financial.setYesterdayOrders(yesterdayOrders);
-        financial.setAverageOrderValue(averageOrderValue);
-        financial.setActiveProducts(activeProducts);
-        financial.setTotalProducts(totalProducts);
-        financial.setDeactivatedProducts(deactivatedProducts);
-        financial.setLowStockCount(lowStockPage != null ? lowStockPage.getTotalElements() : 0L);
+        ResDashboardFinancialDto financial = merchantDashboardMapper.toFinancial(
+                todayRevenue,
+                todayOrders,
+                yesterdayRevenue,
+                yesterdayOrders,
+                averageOrderValue,
+                activeProducts,
+                totalProducts,
+                deactivatedProducts,
+                lowStockPage != null ? lowStockPage.getTotalElements() : 0L
+        );
 
         ResMerchantDashboardDto result = new ResMerchantDashboardDto();
         result.setFinancial(financial);
@@ -247,7 +223,6 @@ public class MerchantServiceImpl implements MerchantService {
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
         merchant.setIsActive(request.getIsActive());
         return merchantMapper.toResponse(merchantRepository.save(merchant));
-        // TODO: INVALIDATE MERCHANT SESSION UNTILL ADMIN RE-ACTIVATE THE MERCHANT ACCOUNT OR TTL FOR DEACTIVATION
     }
 
     @Override
