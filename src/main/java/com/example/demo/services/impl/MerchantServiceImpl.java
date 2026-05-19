@@ -17,6 +17,7 @@ import com.example.demo.mappers.MerchantMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.repositories.MerchantRepository;
+import com.example.demo.repositories.WalletRepository;
 import com.example.demo.repositories.specs.MerchantSpecification;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.WalletService;
@@ -42,6 +43,7 @@ public class MerchantServiceImpl implements MerchantService {
     private final WalletService walletService;
     private final PasswordEncoder passwordEncoder;
     private final MerchantMapper merchantMapper;
+    private final WalletRepository walletRepository;
 
     @Override
     @Transactional
@@ -95,7 +97,13 @@ public class MerchantServiceImpl implements MerchantService {
     public ResMerchantDto getMerchantById(UUID merchantId) {
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
-        return merchantMapper.toResponse(merchant);
+        
+        ResMerchantDto response = merchantMapper.toResponse(merchant);
+
+        walletRepository.findByOwnerIdAndOwnerType(merchantId, OwnerTypeEnum.MERCHANT)
+                .ifPresent(wallet -> response.setBalance(wallet.getAmount()));
+                
+        return response;
     }
 
     @Override

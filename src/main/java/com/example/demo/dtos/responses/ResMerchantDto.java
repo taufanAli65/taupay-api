@@ -34,4 +34,7 @@ public class ResMerchantDto {
 
     @Schema(description = "Whether the merchant account is active.", example = "true")
     private Boolean active;
+
+    @Schema(description = "Merchant wallet balance.", example = "1500000")
+    private Long balance;
 }

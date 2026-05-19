@@ -279,7 +279,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         accountProductTransactionRepository.saveAll(links);
 
-        notifySse(trxId, "PAID", payload.getTotal());
+        notifySse(trxId, request.getStatus() != null ? request.getStatus() : "PAID", payload.getTotal());
         transactionCacheService.evict(trxId);
     }
     
@@ -316,11 +316,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private void notifySse(String trxId, String status, Long total) {
-        Map<String, Object> payload = Map.of(
-                "trx_id", trxId,
-                "status", status,
-                "total", total
-        );
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("trx_id", trxId);
+        payload.put("status", status);
+        payload.put("total", total);
+        
         eventStreamService.publish(trxId, "payment", payload);
     }
 
