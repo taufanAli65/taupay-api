@@ -20,4 +20,7 @@ public class ReqPaymentCallbackDto {
     @Pattern(regexp = "^\\d{6}$", message = "PIN must be exactly 6 digits")
     @Schema(description = "6-digit account PIN.", example = "123456")
     private String pin;
+
+    @Schema(description = "Payment status (e.g., PAID).", example = "PAID")
+    private String status;
 }
