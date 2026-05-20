@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Schema(name = "ReqLoginDto", description = "Login request payload.")
@@ -15,5 +16,6 @@ public class ReqLoginDto {
 
     @NotBlank
     @Schema(description = "Account password.", example = "password123")
+    @ToString.Exclude
     private String password;
 }

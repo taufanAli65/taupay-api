@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.UUID;
 
@@ -32,5 +33,6 @@ public class ReqRegisterMerchantDto {
     @NotBlank(message = "password is required")
     @Size(min = 8, message = "Password must be at least 8 characters long")
     @Schema(description = "Merchant account password with minimum 8 characters.", example = "password123")
+    @ToString.Exclude
     private String password;
 }

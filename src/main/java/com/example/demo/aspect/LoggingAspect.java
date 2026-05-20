@@ -66,16 +66,17 @@ public class LoggingAspect {
                className.contains("DuplicateResourceException") ||
                className.contains("AccountLockedException");
     }
-
-    private boolean isWriteOperation(String methodName) {
-        String name = methodName.toLowerCase();
-        return name.contains("create") || 
-               name.contains("update") || 
-               name.contains("delete") || 
-               name.contains("save") || 
-               name.contains("toggle") || 
-               name.contains("activate") || 
-               name.contains("deactivate") ||
-               name.contains("handle");
-    }
+private boolean isWriteOperation(String methodName) {
+    String name = methodName.toLowerCase();
+    return name.contains("create") || 
+           name.contains("update") || 
+           name.contains("delete") || 
+           name.contains("save") || 
+           name.contains("toggle") || 
+           name.contains("activate") || 
+           name.contains("deactivate") ||
+           name.contains("handle") ||
+           name.contains("logout") ||
+           name.contains("change");
+}
 }
