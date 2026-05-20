@@ -91,7 +91,7 @@ public class TransactionServiceImpl implements TransactionService {
             throw new BadRequestException("Products are required");
         }
 
-        MerchantEntity merchant = merchantRepository.findById(merchant_id)
+        MerchantEntity merchant = merchantRepository.findByIdAndIsActiveTrue(merchant_id)
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
 
         List<ResTransactionDto.ProductItem> productItems = new ArrayList<>();
@@ -175,11 +175,21 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         ResTransactionDto payload = transactionCacheService.get(trxId);
+        if (payload == null) {
+            throw new BadRequestException("Transaction payload not found or expired");
+        }
+        if (payload.getMerchant() == null || payload.getMerchant().getMerchantId() == null
+                || payload.getMerchant().getMerchantId().isBlank()) {
+            throw new BadRequestException("merchant_id is missing from transaction payload");
+        }
 
-        UUID merchantId = TransactionUtils.parseUuid(payload.getMerchantId(), "merchant_id");
+        UUID merchantId = TransactionUtils.parseUuid(payload.getMerchant().getMerchantId(), "merchant_id");
 
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
+        if (merchant.getIsActive() == null || Boolean.FALSE.equals(merchant.getIsActive())) {
+            throw new BadRequestException("Merchant is inactive");
+        }
         UserEntity payer = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
         
@@ -280,7 +290,7 @@ public class TransactionServiceImpl implements TransactionService {
         accountProductTransactionRepository.saveAll(links);
 
         notifySse(trxId, request.getStatus() != null ? request.getStatus() : "PAID", payload.getTotal());
-        transactionCacheService.evict(trxId);
+        transactionCacheService.evict(trxId, merchantId);
     }
     
     @Override

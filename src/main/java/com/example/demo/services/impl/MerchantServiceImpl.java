@@ -12,16 +12,12 @@ import com.example.demo.dtos.responses.ResTopProductDto;
 import com.example.demo.dtos.responses.ResDailyRevenueDto;
 import com.example.demo.dtos.responses.ResDashboardFinancialDto;
 import com.example.demo.dtos.responses.ResLowStockProductDto;
-import com.example.demo.dtos.responses.ResMerchantDashboardDto;
 import com.example.demo.entities.*;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.DuplicateResourceException;
-import com.example.demo.exceptions.UnauthorizedException;
-import com.example.demo.mappers.AccountMapper;
 import com.example.demo.mappers.MerchantDashboardMapper;
 import com.example.demo.mappers.MerchantMapper;
-import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -30,11 +26,9 @@ import com.example.demo.repositories.AccountProductTransactionRepository;
 import com.example.demo.repositories.ProductRepository;
 import com.example.demo.repositories.WalletRepository;
 import com.example.demo.repositories.specs.MerchantSpecification;
-import com.example.demo.services.AccountAccessService;
-import com.example.demo.services.AuthService;
 import com.example.demo.services.MerchantService;
+import com.example.demo.services.TransactionCacheService;
 import com.example.demo.services.WalletService;
-import com.example.demo.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,6 +38,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -67,11 +63,8 @@ public class MerchantServiceImpl implements MerchantService {
     private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
     private final MerchantMapper merchantMapper;
-    private final JwtUtil jwtUtil;
-    private final AccountAccessService accountAccessService;
-    private final UserMapper userMapper;
-    private final AccountMapper accountMapper;
     private final MerchantDashboardMapper merchantDashboardMapper;
+    private final TransactionCacheService transactionCacheService;
 
     @Override
     @Transactional
@@ -251,7 +244,22 @@ public class MerchantServiceImpl implements MerchantService {
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
         merchant.setIsActive(request.getIsActive());
-        return merchantMapper.toResponse(merchantRepository.save(merchant));
+        // Persist the status change first. Eviction will run after the surrounding transaction commits
+        MerchantEntity saved = merchantRepository.save(merchant);
+        if (Boolean.FALSE.equals(request.getIsActive())) {
+            // Register after-commit eviction so that no new transactions created in the same transaction slip through
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        transactionCacheService.evictByMerchantId(merchantId);
+                    } catch (Exception ex) {
+                        log.warn("Failed to evict transaction cache after merchant deactivation: merchantId={}", merchantId, ex);
+                    }
+                }
+            });
+        }
+        return merchantMapper.toResponse(saved);
     }
 
     @Override

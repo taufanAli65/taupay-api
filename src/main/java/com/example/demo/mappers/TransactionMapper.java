@@ -27,9 +27,7 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
         if (entity == null) return null;
         ResTransactionDto response = new ResTransactionDto();
         response.setTrxId(entity.getId() != null ? entity.getId().toString() : null);
-        if (entity.getReceiver() != null) {
-            response.setMerchantId(entity.getReceiver().getId().toString());
-        }
+        response.setMerchant(toMerchantSummary(entity.getReceiver()));
         response.setCreatedAt(entity.getCreatedAt());
         response.setTotal(entity.getAmount());
         return response;
@@ -53,11 +51,25 @@ public class TransactionMapper extends BaseMapper<AccountTransactionEntity, Obje
     ) {
         ResTransactionDto response = new ResTransactionDto();
         response.setTrxId(trxId);
-        response.setMerchantId(merchant.getId().toString());
+        response.setMerchant(toMerchantSummary(merchant));
         response.setCreatedAt(createdAt);
         response.setProducts(products);
         response.setTotal(total);
         return response;
+    }
+
+    private ResTransactionDto.MerchantSummary toMerchantSummary(MerchantEntity merchant) {
+        if (merchant == null) return null;
+
+        ResTransactionDto.MerchantSummary summary = new ResTransactionDto.MerchantSummary();
+        summary.setMerchantId(merchant.getId() != null ? merchant.getId().toString() : null);
+        summary.setMerchantName(merchant.getName());
+        summary.setMerchantCategoryName(
+            merchant.getCategory() != null ? merchant.getCategory().getName() : null
+        );
+        summary.setMerchantAddress(merchant.getAddress());
+        summary.setMerchantIsActive(merchant.getIsActive());
+        return summary;
     }
 
     public AccountTransactionEntity toAccountTransaction(
