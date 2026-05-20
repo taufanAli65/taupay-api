@@ -1,12 +1,9 @@
 package com.example.demo.controllers;
 
+import com.example.demo.dtos.requests.ReqChangePinDto;
 import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.requests.ReqPaginationDto;
-import com.example.demo.dtos.responses.BaseResponse;
-import com.example.demo.dtos.responses.ResMerchantCategoryDto;
-import com.example.demo.dtos.responses.ResMerchantDto;
-import com.example.demo.dtos.responses.ResPaginationDto;
-import com.example.demo.dtos.responses.ResTransactionHistoryDto;
+import com.example.demo.dtos.responses.*;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.MerchantCategoryService;
 import com.example.demo.services.TransactionService;
@@ -55,6 +52,17 @@ public class MerchantController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/me/pin")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Change merchant PIN", description = "Updates the merchant PIN. Requires old PIN if already set.")
+    public ResponseEntity<BaseResponse<Void>> changePin(
+            @Valid @RequestBody ReqChangePinDto request
+    ) {
+        UUID merchantId = SecurityUtils.getCurrentProfileId();
+        merchantService.changePin(merchantId, request);
+        return ResponseEntity.ok(BaseResponse.success("PIN Updated Successfully", null));
+    }
+
     // Merchant Category Start Here
     @GetMapping("/category")
     @Operation(summary = "List merchant categories", description = "Returns all available merchant categories.")
@@ -93,7 +101,7 @@ public class MerchantController {
     @Operation(summary = "Get merchant dashboard", description = "Returns aggregated dashboard data for the current merchant.")
     public ResponseEntity<BaseResponse<com.example.demo.dtos.responses.ResMerchantDashboardDto>> getMerchantDashboard() {
         UUID merchantId = SecurityUtils.getCurrentProfileId();
-        com.example.demo.dtos.responses.ResMerchantDashboardDto dto = merchantService.getMerchantDashboard(merchantId);
+        ResMerchantDashboardDto dto = merchantService.getMerchantDashboard(merchantId);
         return ResponseEntity.ok(BaseResponse.success("Merchant Dashboard Retrieved", dto, null));
     }
 }

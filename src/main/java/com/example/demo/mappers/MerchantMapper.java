@@ -24,6 +24,7 @@ public class MerchantMapper extends BaseMapper<MerchantEntity, Object, ResMercha
         
         if (merchant.getAccount() != null) {
             response.setEmail(merchant.getAccount().getEmail());
+            response.setIsPinSet(merchant.getAccount().getPin() != null && !merchant.getAccount().getPin().isBlank());
         }
         
         if (merchant.getCategory() != null) {

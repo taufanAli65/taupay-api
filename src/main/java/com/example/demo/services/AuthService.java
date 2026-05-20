@@ -10,6 +10,8 @@ import com.example.demo.dtos.responses.ResRegisterMerchantDto;
 public interface AuthService {
     ResLoginDto login(ReqLoginDto dto);
 
+    void logout(String token);
+
     ResRegisterDto register(ReqRegisterDto dto);
 
     ResRegisterMerchantDto registerMerchant(ReqRegisterMerchantDto dto);

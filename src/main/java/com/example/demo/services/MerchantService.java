@@ -1,5 +1,6 @@
 package com.example.demo.services;
 
+import com.example.demo.dtos.requests.ReqChangePinDto;
 import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.requests.ReqMerchantFilterDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
@@ -28,4 +29,6 @@ public interface MerchantService {
     ResCommonStatisticsDto getAdminMerchantStatistics();
 
     ResMerchantDashboardDto getMerchantDashboard(UUID merchantId);
+
+    void changePin(UUID merchantId, ReqChangePinDto request);
 }

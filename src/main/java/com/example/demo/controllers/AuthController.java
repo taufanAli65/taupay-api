@@ -9,7 +9,9 @@ import com.example.demo.dtos.responses.ResRegisterDto;
 import com.example.demo.dtos.responses.ResRegisterMerchantDto;
 import com.example.demo.services.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -53,5 +55,17 @@ public class AuthController {
         ResLoginDto user = authService.login(request);
         BaseResponse<ResLoginDto> response = BaseResponse.success("Success Login User", user);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/logout")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Logout", description = "Invalidates the current JWT by blacklisting it in Redis.")
+    public ResponseEntity<BaseResponse<Void>> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            authService.logout(token);
+        }
+        return ResponseEntity.ok(BaseResponse.success("Logout Successful", null));
     }
 }

@@ -38,3 +38,6 @@ application.yaml
 
 # MinIO
 data/
+
+# Logs
+logs/

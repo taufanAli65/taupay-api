@@ -1,26 +1,27 @@
 package com.example.demo.services.impl;
 
+import com.example.demo.dtos.requests.ReqChangePinDto;
 import com.example.demo.dtos.requests.ReqMerchantDto;
 import com.example.demo.dtos.requests.ReqMerchantFilterDto;
 import com.example.demo.dtos.requests.ReqMerchantStatusDto;
 import com.example.demo.dtos.requests.ReqRegisterMerchantDto;
 import com.example.demo.dtos.responses.ResCommonStatisticsDto;
+import com.example.demo.dtos.responses.ResMerchantDashboardDto;
 import com.example.demo.dtos.responses.ResMerchantDto;
 import com.example.demo.dtos.responses.ResTopProductDto;
 import com.example.demo.dtos.responses.ResDailyRevenueDto;
 import com.example.demo.dtos.responses.ResDashboardFinancialDto;
 import com.example.demo.dtos.responses.ResLowStockProductDto;
 import com.example.demo.dtos.responses.ResMerchantDashboardDto;
-import com.example.demo.entities.AccountEntity;
-import com.example.demo.entities.MerchantCategoryEntity;
-import com.example.demo.entities.MerchantEntity;
-import com.example.demo.entities.OwnerTypeEnum;
-import com.example.demo.entities.ProductEntity;
-import com.example.demo.entities.RoleEnum;
+import com.example.demo.entities.*;
+import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
 import com.example.demo.exceptions.DuplicateResourceException;
-import com.example.demo.mappers.MerchantMapper;
+import com.example.demo.exceptions.UnauthorizedException;
+import com.example.demo.mappers.AccountMapper;
 import com.example.demo.mappers.MerchantDashboardMapper;
+import com.example.demo.mappers.MerchantMapper;
+import com.example.demo.mappers.UserMapper;
 import com.example.demo.repositories.AccountRepository;
 import com.example.demo.repositories.MerchantCategoryRepository;
 import com.example.demo.repositories.MerchantRepository;
@@ -29,9 +30,13 @@ import com.example.demo.repositories.AccountProductTransactionRepository;
 import com.example.demo.repositories.ProductRepository;
 import com.example.demo.repositories.WalletRepository;
 import com.example.demo.repositories.specs.MerchantSpecification;
+import com.example.demo.services.AccountAccessService;
+import com.example.demo.services.AuthService;
 import com.example.demo.services.MerchantService;
 import com.example.demo.services.WalletService;
+import com.example.demo.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -40,16 +45,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MerchantServiceImpl implements MerchantService {
     private final AccountRepository accountRepository;
     private final MerchantRepository merchantRepository;
@@ -58,10 +64,14 @@ public class MerchantServiceImpl implements MerchantService {
     private final AccountProductTransactionRepository accountProductTransactionRepository;
     private final ProductRepository productRepository;
     private final WalletService walletService;
+    private final WalletRepository walletRepository;
     private final PasswordEncoder passwordEncoder;
     private final MerchantMapper merchantMapper;
+    private final JwtUtil jwtUtil;
+    private final AccountAccessService accountAccessService;
+    private final UserMapper userMapper;
+    private final AccountMapper accountMapper;
     private final MerchantDashboardMapper merchantDashboardMapper;
-    private final WalletRepository walletRepository;
 
     @Override
     @Transactional
@@ -188,7 +198,8 @@ public class MerchantServiceImpl implements MerchantService {
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
         
         ResMerchantDto response = merchantMapper.toResponse(merchant);
-
+        
+        // Fetch balance
         walletRepository.findByOwnerIdAndOwnerType(merchantId, OwnerTypeEnum.MERCHANT)
                 .ifPresent(wallet -> response.setBalance(wallet.getAmount()));
                 
@@ -205,15 +216,33 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setName(request.getName());
         merchant.setAddress(request.getAddress());
         merchant.setCategory(category);
-        if (request.getPin() != null) {
-            AccountEntity account = merchant.getAccount();
-            if (account == null) {
-                throw new DataNotFoundException("Account for merchant with ID: " + merchantId + " not found");
-            }
-            account.setPin(passwordEncoder.encode(request.getPin()));
-        }
 
         return merchantMapper.toResponse(merchantRepository.save(merchant));
+    }
+
+    @Override
+    @Transactional
+    public void changePin(UUID merchantId, ReqChangePinDto request) {
+        MerchantEntity merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
+        AccountEntity account = merchant.getAccount();
+        if (account == null) {
+            throw new DataNotFoundException("Account not found for merchant: " + merchantId);
+        }
+
+        // If merchant already has a PIN, validate the old one
+        if (account.getPin() != null && !account.getPin().isBlank()) {
+            if (request.getOldPin() == null || request.getOldPin().isBlank()) {
+                throw new BadRequestException("Current PIN is required to set a new one");
+            }
+            if (!passwordEncoder.matches(request.getOldPin(), account.getPin())) {
+                throw new BadRequestException("Current PIN is incorrect");
+            }
+        }
+
+        // Encode and save new PIN
+        account.setPin(passwordEncoder.encode(request.getNewPin()));
+        merchantRepository.save(merchant);
     }
 
     @Override

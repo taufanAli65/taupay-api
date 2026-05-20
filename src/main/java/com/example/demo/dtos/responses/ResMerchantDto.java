@@ -37,4 +37,7 @@ public class ResMerchantDto {
 
     @Schema(description = "Merchant wallet balance.", example = "1500000")
     private Long balance;
+
+    @Schema(description = "Whether the merchant has set a PIN.", example = "true")
+    private Boolean isPinSet;
 }

@@ -24,8 +24,4 @@ public class ReqUserUpdateDto {
 
     @Schema(description = "Updated birth date.", example = "1998-04-12", type = "string", format = "date")
     private LocalDate birthDate;
-
-    @Pattern(regexp = "^\\d{6}$", message = "PIN must be exactly 6 digits")
-    @Schema(description = "Updated 6-digit PIN.", example = "123456")
-    private String pin;
 }
