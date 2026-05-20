@@ -40,6 +40,7 @@ public class UserMapper extends BaseMapper<UserEntity, ReqRegisterDto, ResRegist
         map(user, response);
         if (user.getAccount() != null) {
             response.setEmail(user.getAccount().getEmail());
+            response.setIsPinSet(user.getAccount().getPin() != null && !user.getAccount().getPin().isBlank());
         }
         return response;
     }

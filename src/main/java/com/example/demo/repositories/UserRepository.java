@@ -22,14 +22,15 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
             "a.email, " +
             "u.address, " +
             "u.birthDate, " +
-            "u.isActive ) " +
+            "u.isActive, " +
+            "(a.pin is not null) ) " +
             "from UserEntity u " +
             "join u.account a " +
             "where u.id = :userId")
     Optional<ResUserDto> findUserById(@Param("userId") UUID userId);
 
     @EntityGraph(attributePaths = {"account"})
-    Page<UserEntity> findAll(Specification<UserEntity> spec, Pageable pageable);
+    Page<UserEntity> findAll(org.springframework.data.jpa.domain.Specification<UserEntity> spec, Pageable pageable);
 
     @Query(value = "select new com.example.demo.dtos.responses.ResUserDto( " +
             "u.id, " +
@@ -38,7 +39,8 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
             "a.email, " +
             "u.address, " +
             "u.birthDate, " +
-            "u.isActive ) " +
+            "u.isActive, " +
+            "(a.pin is not null) ) " +
             "from UserEntity u " +
             "join u.account a",
             countQuery = "select count(u) from UserEntity u")

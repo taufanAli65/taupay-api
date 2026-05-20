@@ -37,6 +37,20 @@ public class ResUserDto {
     @Schema(description = "User wallet balance.", example = "50000")
     private Long balance;
 
+    @Schema(description = "Whether the user has set a PIN.", example = "true")
+    private Boolean isPinSet;
+
+    public ResUserDto(UUID id, String firstName, String lastName, String email, String address, LocalDate birthDate, Boolean isActive, Boolean isPinSet) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.address = address;
+        this.birthDate = birthDate;
+        this.isActive = isActive;
+        this.isPinSet = isPinSet;
+    }
+
     public ResUserDto(UUID id, String firstName, String lastName, String email, String address, LocalDate birthDate, Boolean isActive) {
         this.id = id;
         this.firstName = firstName;
