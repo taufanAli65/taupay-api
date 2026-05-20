@@ -175,6 +175,13 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         ResTransactionDto payload = transactionCacheService.get(trxId);
+        if (payload == null) {
+            throw new BadRequestException("Transaction payload not found or expired");
+        }
+        if (payload.getMerchant() == null || payload.getMerchant().getMerchantId() == null
+                || payload.getMerchant().getMerchantId().isBlank()) {
+            throw new BadRequestException("merchant_id is missing from transaction payload");
+        }
 
         UUID merchantId = TransactionUtils.parseUuid(payload.getMerchant().getMerchantId(), "merchant_id");
 

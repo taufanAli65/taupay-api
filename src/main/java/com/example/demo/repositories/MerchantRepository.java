@@ -28,6 +28,7 @@ public interface MerchantRepository extends JpaRepository<MerchantEntity, UUID>,
     @EntityGraph(attributePaths = {"account", "category"})
     Optional<MerchantEntity> findById(UUID merchantId);
 
+    @EntityGraph(attributePaths = {"account", "category"})
     Optional<MerchantEntity> findByIdAndIsActiveTrue(UUID merchantId);
 
     long countByIsActiveTrue();
