@@ -9,7 +9,7 @@ public interface TransactionCacheService {
 
     ResTransactionDto get(String trxId);
 
-    void evict(String trxId);
+    void evict(String trxId, UUID merchantId);
 
     void evictByMerchantId(UUID merchantId);
 }

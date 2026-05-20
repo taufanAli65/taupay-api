@@ -180,6 +180,9 @@ public class TransactionServiceImpl implements TransactionService {
 
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
+        if (merchant.getIsActive() == null || Boolean.FALSE.equals(merchant.getIsActive())) {
+            throw new BadRequestException("Merchant is inactive");
+        }
         UserEntity payer = userRepository.findById(userId)
                 .orElseThrow(() -> new DataNotFoundException("User not found"));
         
@@ -280,7 +283,7 @@ public class TransactionServiceImpl implements TransactionService {
         accountProductTransactionRepository.saveAll(links);
 
         notifySse(trxId, request.getStatus() != null ? request.getStatus() : "PAID", payload.getTotal());
-        transactionCacheService.evict(trxId);
+        transactionCacheService.evict(trxId, merchantId);
     }
     
     @Override

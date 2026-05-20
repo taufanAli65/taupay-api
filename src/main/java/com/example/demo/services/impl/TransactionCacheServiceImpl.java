@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TransactionCacheServiceImpl implements TransactionCacheService {
     private static final String TRX_KEY_PREFIX = "trx:";
+    private static final String TRX_MERCHANT_INDEX_PREFIX = "trx:merchant:";
 
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
@@ -36,6 +37,16 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
         try {
             String json = objectMapper.writeValueAsString(payload);
             stringRedisTemplate.opsForValue().set(cacheKey, json, transactionTtl);
+            // Register the cache key in the merchant index ZSET using the key's expiration timestamp as score.
+            // Also prune expired members to avoid historical accumulation.
+            if (payload != null && payload.getMerchant() != null && payload.getMerchant().getMerchantId() != null) {
+                String merchantIndexKey = buildMerchantIndexKey(payload.getMerchant().getMerchantId());
+                long now = System.currentTimeMillis();
+                long expireAt = now + transactionTtl.toMillis();
+                stringRedisTemplate.opsForZSet().removeRangeByScore(merchantIndexKey, 0, now);
+                stringRedisTemplate.opsForZSet().add(merchantIndexKey, cacheKey, (double) expireAt);
+                stringRedisTemplate.expire(merchantIndexKey, transactionTtl);
+            }
         } catch (JsonProcessingException ex) {
             throw new BadRequestException("Failed to cache transaction payload");
         }
@@ -59,10 +70,18 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
     }
 
     @Override
-    public void evict(String trxId) {
+    public void evict(String trxId, UUID merchantId) {
         String cacheKey = buildCacheKey(trxId);
         stringRedisTemplate.delete(cacheKey);
-        log.info("Evicted transaction cache: trxId={}, cacheKey={}", trxId, cacheKey);
+        if (merchantId != null) {
+            String merchantIndexKey = buildMerchantIndexKey(merchantId.toString());
+            stringRedisTemplate.opsForZSet().remove(merchantIndexKey, cacheKey);
+            Long remaining = stringRedisTemplate.opsForZSet().zCard(merchantIndexKey);
+            if (remaining == null || remaining == 0) {
+                stringRedisTemplate.delete(merchantIndexKey);
+            }
+        }
+        log.info("Evicted transaction cache: trxId={}, cacheKey={}, merchantId={}", trxId, cacheKey, merchantId);
     }
 
     @Override
@@ -70,33 +89,34 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
         if (merchantId == null) {
             return;
         }
+        String merchantIndexKey = buildMerchantIndexKey(merchantId.toString());
+        long now = System.currentTimeMillis();
+        // Prune expired members first (score <= now)
+        stringRedisTemplate.opsForZSet().removeRangeByScore(merchantIndexKey, 0, now);
 
-        Set<String> keys = stringRedisTemplate.keys(TRX_KEY_PREFIX + "*");
-        if (keys == null || keys.isEmpty()) {
+        // Fetch currently live members (score > now)
+        Set<String> members = stringRedisTemplate.opsForZSet().rangeByScore(merchantIndexKey, (double) (now + 1), Double.POSITIVE_INFINITY);
+        if (members == null || members.isEmpty()) {
+            // nothing live to evict; delete the (now-empty) index key
+            stringRedisTemplate.delete(merchantIndexKey);
+            log.info("No live transaction cache entries to evict for merchantId={}", merchantId);
             return;
         }
 
-        String merchantIdValue = merchantId.toString();
-        for (String key : keys) {
-            String json = stringRedisTemplate.opsForValue().get(key);
-            if (json == null || json.isBlank()) {
-                continue;
-            }
-            try {
-                ResTransactionDto payload = objectMapper.readValue(json, ResTransactionDto.class);
-                ResTransactionDto.MerchantSummary merchant = payload.getMerchant();
-                if (merchant != null && merchantIdValue.equals(merchant.getMerchantId())) {
-                    stringRedisTemplate.delete(key);
-                    log.info("Evicted transaction cache for merchant: merchantId={}, cacheKey={}", merchantIdValue, key);
-                }
-            } catch (JsonProcessingException ex) {
-                log.warn("Failed to parse transaction cache payload for key: {}", key, ex);
-            }
-        }
+        // Batch delete live transaction keys
+        stringRedisTemplate.delete(members);
+        // Remove these members from the index and delete the index key to fully clear state for deactivated merchant
+        stringRedisTemplate.opsForZSet().remove(merchantIndexKey, members.toArray());
+        stringRedisTemplate.delete(merchantIndexKey);
+        log.info("Evicted {} live transaction cache entries for merchantId={}", members.size(), merchantId);
     }
 
     private String buildCacheKey(String trxId) {
         return TRX_KEY_PREFIX + normalizeTrxId(trxId);
+    }
+
+    private String buildMerchantIndexKey(String merchantId) {
+        return TRX_MERCHANT_INDEX_PREFIX + merchantId;
     }
 
     private String normalizeTrxId(String trxId) {

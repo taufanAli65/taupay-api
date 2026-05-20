@@ -38,6 +38,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -242,10 +244,22 @@ public class MerchantServiceImpl implements MerchantService {
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant with ID: " + merchantId + " not found"));
         merchant.setIsActive(request.getIsActive());
+        // Persist the status change first. Eviction will run after the surrounding transaction commits
+        MerchantEntity saved = merchantRepository.save(merchant);
         if (Boolean.FALSE.equals(request.getIsActive())) {
-            transactionCacheService.evictByMerchantId(merchantId);
+            // Register after-commit eviction so that no new transactions created in the same transaction slip through
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        transactionCacheService.evictByMerchantId(merchantId);
+                    } catch (Exception ex) {
+                        log.warn("Failed to evict transaction cache after merchant deactivation: merchantId={}", merchantId, ex);
+                    }
+                }
+            });
         }
-        return merchantMapper.toResponse(merchantRepository.save(merchant));
+        return merchantMapper.toResponse(saved);
     }
 
     @Override
