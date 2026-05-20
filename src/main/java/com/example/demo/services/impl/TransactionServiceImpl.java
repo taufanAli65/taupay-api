@@ -91,7 +91,7 @@ public class TransactionServiceImpl implements TransactionService {
             throw new BadRequestException("Products are required");
         }
 
-        MerchantEntity merchant = merchantRepository.findById(merchant_id)
+        MerchantEntity merchant = merchantRepository.findByIdAndIsActiveTrue(merchant_id)
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));
 
         List<ResTransactionDto.ProductItem> productItems = new ArrayList<>();
@@ -176,7 +176,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         ResTransactionDto payload = transactionCacheService.get(trxId);
 
-        UUID merchantId = TransactionUtils.parseUuid(payload.getMerchantId(), "merchant_id");
+        UUID merchantId = TransactionUtils.parseUuid(payload.getMerchant().getMerchantId(), "merchant_id");
 
         MerchantEntity merchant = merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new DataNotFoundException("Merchant not found"));

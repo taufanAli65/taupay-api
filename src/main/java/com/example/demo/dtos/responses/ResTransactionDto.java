@@ -1,5 +1,6 @@
 package com.example.demo.dtos.responses;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -15,9 +16,8 @@ public class ResTransactionDto {
     @Schema(description = "Unique transaction identifier", example = "TRX-12345")
     private String trxId;
 
-    @JsonProperty("merchant_id")
-    @Schema(description = "ID of the merchant", example = "4e3d11ea-2b75-4c45-bfb7-bbc4f8ab1c29")
-    private String merchantId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private MerchantSummary merchant;
 
     @JsonProperty("created_at")
     @Schema(description = "Timestamp when the transaction was created", example = "2026-05-12T12:00:00")
@@ -49,4 +49,28 @@ public class ResTransactionDto {
         @Schema(description = "Price per unit", example = "25000")
         private Long price;
     }
+    @Data
+    @Schema(name = "ResTransactionMerchantSummary", description = "Merchant details included in transaction response.")
+    public static class MerchantSummary {
+
+        @JsonProperty("merchant_id")
+        @Schema(description = "Merchant identifier.", example = "d290f1ee-6c54-4b01-90e6-d701748f0851")
+        private String merchantId;
+
+        @JsonProperty("merchant_name")
+        @Schema(description = "Merchant name.", example = "Taupay Coffee")
+        private String merchantName;
+
+        @JsonProperty("merchant_category_name")
+        @Schema(description = "Merchant category name.", example = "Food & Beverage")
+        private String merchantCategoryName;
+
+        @JsonProperty("merchant_address")
+        @Schema(description = "Merchant address.", example = "Jl. Gatot Subroto No. 20, Jakarta")
+        private String merchantAddress;
+
+        @JsonProperty("merchant_is_active")
+        @Schema(description = "Whether the merchant account is active.", example = "true")
+        private Boolean merchantIsActive;
     }
+}
