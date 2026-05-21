@@ -24,12 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 public class TransactionCacheServiceImpl implements TransactionCacheService {
     private static final String TRX_KEY_PREFIX = "trx:";
     private static final String TRX_MERCHANT_INDEX_PREFIX = "trx:merchant:";
+    private static final String IDEMPOTENCY_KEY_PREFIX = "idempotency:";
 
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
     @Value("${app.transaction.ttl:5m}")
     private Duration transactionTtl;
+
+    @Value("${app.idempotency.ttl:15m}")
+    private Duration idempotencyTtl;
 
     @Override
     public void save(String trxId, ResTransactionDto payload) {
@@ -67,6 +71,19 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
         } catch (JsonProcessingException ex) {
             throw new BadRequestException("Failed to read transaction payload");
         }
+    }
+
+    @Override
+    public boolean isAlreadyProcessed(String trxId, UUID userId) {
+        String key = buildIdempotencyKey(trxId, userId);
+        Boolean exists = stringRedisTemplate.hasKey(key);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    @Override
+    public void markAsProcessed(String trxId, UUID userId) {
+        String key = buildIdempotencyKey(trxId, userId);
+        stringRedisTemplate.opsForValue().set(key, "1", idempotencyTtl);
     }
 
     @Override
@@ -117,6 +134,10 @@ public class TransactionCacheServiceImpl implements TransactionCacheService {
 
     private String buildMerchantIndexKey(String merchantId) {
         return TRX_MERCHANT_INDEX_PREFIX + merchantId;
+    }
+
+    private String buildIdempotencyKey(String trxId, UUID userId) {
+        return IDEMPOTENCY_KEY_PREFIX + normalizeTrxId(trxId) + ":" + userId;
     }
 
     private String normalizeTrxId(String trxId) {

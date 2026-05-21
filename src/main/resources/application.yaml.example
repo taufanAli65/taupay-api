@@ -27,6 +27,8 @@ spring:
 app:
   cache:
     merchant-category-ttl: 1h
+  idempotency:
+    ttl: 15m
   rate-limit:
     enabled: true
     api-prefix: /api/v1

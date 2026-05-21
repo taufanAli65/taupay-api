@@ -41,6 +41,8 @@ jwt:
 app:
   cache:
     merchant-category-ttl: 1h
+  idempotency:
+    ttl: 15m
   transaction:
     ttl: 5m
   rate-limit:

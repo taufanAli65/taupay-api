@@ -37,6 +37,7 @@ import com.example.demo.entities.UserEntity;
 import com.example.demo.exceptions.AccountLockedException;
 import com.example.demo.exceptions.BadRequestException;
 import com.example.demo.exceptions.DataNotFoundException;
+import com.example.demo.exceptions.DuplicateResourceException;
 import com.example.demo.mappers.TransactionMapper;
 import com.example.demo.repositories.AccountProductTransactionRepository;
 import com.example.demo.repositories.AccountTransactionRepository;
@@ -174,6 +175,10 @@ public class TransactionServiceImpl implements TransactionService {
             throw new BadRequestException("trx_id is required");
         }
 
+        if (transactionCacheService.isAlreadyProcessed(trxId, userId)) {
+            throw new DuplicateResourceException("Transaction already processed");
+        }
+
         ResTransactionDto payload = transactionCacheService.get(trxId);
         if (payload == null) {
             throw new BadRequestException("Transaction payload not found or expired");
@@ -291,6 +296,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         notifySse(trxId, request.getStatus() != null ? request.getStatus() : "PAID", payload.getTotal());
         transactionCacheService.evict(trxId, merchantId);
+        transactionCacheService.markAsProcessed(trxId, userId);
     }
     
     @Override

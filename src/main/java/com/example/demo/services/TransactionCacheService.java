@@ -9,6 +9,10 @@ public interface TransactionCacheService {
 
     ResTransactionDto get(String trxId);
 
+    boolean isAlreadyProcessed(String trxId, UUID userId);
+
+    void markAsProcessed(String trxId, UUID userId);
+
     void evict(String trxId, UUID merchantId);
 
     void evictByMerchantId(UUID merchantId);
